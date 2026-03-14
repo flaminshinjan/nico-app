@@ -1,7 +1,12 @@
+import { EditorConnectorProvider } from "./contexts/EditorConnectorContext";
 import { EditorLayout } from "./layouts/EditorLayout";
 
 function App() {
-  return <EditorLayout />;
+  return (
+    <EditorConnectorProvider>
+      <EditorLayout />
+    </EditorConnectorProvider>
+  );
 }
 
 export default App;

@@ -1,4 +1,5 @@
 import { DocumentEditor as OnlyOfficeEditor } from "@onlyoffice/document-editor-react";
+import { useOnlyOfficeConnector } from "@/hooks/useOnlyOfficeConnector";
 
 const DOCUMENT_SERVER_URL =
   import.meta.env.VITE_ONLYOFFICE_SERVER_URL || "http://localhost:80";
@@ -16,6 +17,7 @@ const config = {
   editorConfig: {
     callbackUrl: `${window.location.origin}/api/onlyoffice/callback`,
     customization: {
+      toolbar: false,
       compactHeader: true,
       compactToolbar: false,
       uiTheme: "theme-light",
@@ -27,7 +29,6 @@ const config = {
   },
 };
 
-function onDocumentReady() {}
 
 function onLoadComponentError(errorCode: number, errorDescription: string) {
   if (errorCode === -2) {
@@ -39,6 +40,8 @@ function onLoadComponentError(errorCode: number, errorDescription: string) {
 }
 
 export function DocumentEditor() {
+  const { initConnector } = useOnlyOfficeConnector();
+
   return (
     <div className="flex-1 min-h-0 bg-white">
       <OnlyOfficeEditor
@@ -47,7 +50,7 @@ export function DocumentEditor() {
         config={config}
         height="100%"
         width="100%"
-        events_onDocumentReady={onDocumentReady}
+        events_onDocumentReady={initConnector}
         onLoadComponentError={onLoadComponentError}
       />
     </div>
