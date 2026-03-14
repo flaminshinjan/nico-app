@@ -38,10 +38,6 @@ AI-powered document editing platform with ONLYOFFICE Document Editor.
 
 5. Open http://localhost:3000
 
-## Custom Toolbar (Developer Edition)
-
-The custom formatting toolbar (bold, italic, underline, alignment, lists, etc.) uses the ONLYOFFICE Automation API (`createConnector`). This requires **ONLYOFFICE Docs Developer** edition with the connector feature enabled. In Community Edition, the toolbar buttons will be disabled; use ONLYOFFICE's built-in toolbar by setting `toolbar: true` in the DocumentEditor config.
-
 ## Project Structure
 
 ```
