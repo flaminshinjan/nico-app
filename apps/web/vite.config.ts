@@ -11,5 +11,17 @@ export default defineConfig({
   },
   server: {
     port: 3000,
+    proxy: {
+      "/api/serp": {
+        target: "https://serpapi.com",
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/serp/, ""),
+      },
+      "/api/groq": {
+        target: "https://api.groq.com",
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/groq/, ""),
+      },
+    },
   },
 });
