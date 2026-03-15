@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { CKEditor } from "@ckeditor/ckeditor5-react";
 import ClassicEditor from "@ckeditor/ckeditor5-build-classic";
 import mammoth from "mammoth";
@@ -10,7 +10,11 @@ type EditorInstance = {
   getData: () => string;
 };
 
-export function DocumentEditor() {
+type DocumentEditorProps = {
+  topBarAction?: ReactNode;
+};
+
+export function DocumentEditor({ topBarAction }: DocumentEditorProps) {
   const { registerEditor, notifyContentChange } = useDocumentEditor();
   const editorRef = useRef<EditorInstance | null>(null);
   const unregisterRef = useRef<(() => void) | null>(null);
@@ -115,6 +119,7 @@ export function DocumentEditor() {
         >
           Add page
         </button>
+        {topBarAction ? <div className="ml-auto">{topBarAction}</div> : null}
       </header>
       <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden bg-white flex justify-center py-8 px-4 document-scroll">
         <div className="document-page shadow-xl shrink-0 rounded-2xl overflow-hidden" style={{ width: "210mm", minHeight: "297mm" }}>
