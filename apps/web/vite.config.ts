@@ -12,5 +12,12 @@ export default defineConfig({
   server: {
     port: 3000,
     host: true,
+    proxy: {
+      "/api/mastra": {
+        target: "http://localhost:4111",
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/mastra/, "/api"),
+      },
+    },
   },
 });

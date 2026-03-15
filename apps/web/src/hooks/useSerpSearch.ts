@@ -1,3 +1,5 @@
+// Legacy reference kept during the Mastra migration. ChatContext now receives
+// sources from the Mastra documentWorkflow response instead of calling this directly.
 export type SerpResult = {
   title: string;
   url: string;
