@@ -1,9 +1,10 @@
 import { fileURLToPath, URL } from "node:url";
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
+import { documentsPlugin } from "./vite.documents-plugin";
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), documentsPlugin()],
   resolve: {
     alias: {
       "@": fileURLToPath(new URL("./src", import.meta.url)),
@@ -11,6 +12,7 @@ export default defineConfig({
   },
   server: {
     port: 3000,
+    host: true,
     proxy: {
       "/api/serp": {
         target: "https://serpapi.com",

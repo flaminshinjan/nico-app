@@ -7,3 +7,112 @@ body {
   font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
     sans-serif;
 }
+
+/* A4 document page: layout and editable area */
+.document-page {
+  box-sizing: border-box;
+  background: #ffffff;
+}
+
+.document-page .ck.ck-editor {
+  border: none;
+  outline: none;
+  box-shadow: none;
+}
+
+.document-page .ck-editor__top {
+  padding: 0.5rem 0.75rem;
+  border: none;
+  border-bottom: none;
+  background: #f8fafc;
+}
+
+.document-page {
+  height: 297mm;
+  display: flex;
+  flex-direction: column;
+}
+
+.document-page .ck.ck-editor {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+.document-page .ck-editor__main {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  border: none;
+  outline: none;
+  box-shadow: none;
+}
+
+.document-page .ck-editor__editable {
+  --doc-margin: 2.5cm;
+  width: 100%;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: var(--doc-margin) !important;
+  border: none !important;
+  outline: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  box-sizing: border-box;
+  font-size: 12pt;
+  line-height: 1.15;
+  font-family: "Calibri", "Candara", "Segoe", "Segoe UI", "Optima", Arial, sans-serif;
+  color: #1a1a1a;
+  background: #ffffff !important;
+}
+
+.document-page .ck-editor__editable.ck-focused {
+  box-shadow: none !important;
+  border: none !important;
+  outline: none !important;
+}
+
+.document-page .ck * {
+  outline: none;
+}
+
+.document-page .ck-editor__editable p {
+  margin: 0 0 0.5em 0;
+}
+
+.document-page .ck-editor__editable p:last-child {
+  margin-bottom: 0;
+}
+
+.document-page .ck-editor__editable h1 {
+  font-size: 16pt;
+  font-weight: 700;
+  margin: 0.75em 0 0.25em 0;
+  line-height: 1.2;
+}
+
+.document-page .ck-editor__editable h2 {
+  font-size: 14pt;
+  font-weight: 700;
+  margin: 0.6em 0 0.2em 0;
+  line-height: 1.2;
+}
+
+.document-page .ck-editor__editable h3 {
+  font-size: 12pt;
+  font-weight: 700;
+  margin: 0.5em 0 0.2em 0;
+  line-height: 1.2;
+}
+
+.document-page .ck-editor__editable ul,
+.document-page .ck-editor__editable ol {
+  margin: 0.5em 0;
+  padding-left: 1.5em;
+}
+
+.document-page .ck-editor__editable li {
+  margin: 0.15em 0;
+}

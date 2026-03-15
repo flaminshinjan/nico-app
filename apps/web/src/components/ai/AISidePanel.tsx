@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 
 import { DocCard } from "@/components/ai/DocCard";
 import { useChat } from "@/context/ChatContext";
+import { useDocumentEditor } from "@/context/DocumentEditorContext";
 import { DocPreviewModal } from "@/components/ai/DocPreviewModal";
 import { SourcesCard } from "@/components/ai/SourcesCard";
 import { StepsTracker } from "@/components/ai/StepsTracker";
@@ -41,9 +42,24 @@ function StreamingPreview({ content }: { content: string }) {
 
 export function AISidePanel() {
   const { messages, sendMessage, isLoading } = useChat();
+  const { embedGeneratedContent } = useDocumentEditor();
   const [inputValue, setInputValue] = useState("");
   const [previewDoc, setPreviewDoc] = useState<GeneratedDoc | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
+  const lastEmbeddedMessageIdRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    const lastAssistantWithDoc = [...messages].reverse().find(
+      (m) => m.role === "assistant" && m.doc
+    ) as AssistantMessage | undefined;
+    if (
+      lastAssistantWithDoc?.doc &&
+      lastEmbeddedMessageIdRef.current !== lastAssistantWithDoc.id
+    ) {
+      lastEmbeddedMessageIdRef.current = lastAssistantWithDoc.id;
+      void embedGeneratedContent(lastAssistantWithDoc.doc);
+    }
+  }, [messages, embedGeneratedContent]);
 
   useEffect(() => {
     const container = scrollContainerRef.current;
@@ -162,7 +178,11 @@ export function AISidePanel() {
         )}
       </div>
       {previewDoc ? (
-        <DocPreviewModal doc={previewDoc} onClose={() => setPreviewDoc(null)} />
+        <DocPreviewModal
+          doc={previewDoc}
+          onClose={() => setPreviewDoc(null)}
+          onEmbed={() => previewDoc && embedGeneratedContent(previewDoc)}
+        />
       ) : null}
       <form
         onSubmit={handleSubmit}
