@@ -1,19 +1,4 @@
+# No external services required - editor runs in the browser (CKEditor 5)
 version: "3.8"
 
-services:
-  onlyoffice:
-    image: onlyoffice/documentserver:latest
-    container_name: onlyoffice-documentserver
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - onlyoffice_data:/var/www/onlyoffice/Data
-      - onlyoffice_logs:/var/log/onlyoffice
-    environment:
-      - JWT_ENABLED=false
-    restart: unless-stopped
-
-volumes:
-  onlyoffice_data:
-  onlyoffice_logs:
+services: {}
