@@ -41,10 +41,15 @@ function StreamingPreview({ content }: { content: string }) {
 }
 
 type AISidePanelProps = {
+  isOpen: boolean;
   onClose: () => void;
 };
 
-export function AISidePanel({ onClose }: AISidePanelProps) {
+export function AISidePanel({ isOpen, onClose }: AISidePanelProps) {
+  if (!isOpen) {
+    return null;
+  }
+
   const { messages, sendMessage, isLoading } = useChat();
   const { embedGeneratedContent } = useDocumentEditor();
   const [inputValue, setInputValue] = useState("");

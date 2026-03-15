@@ -7,6 +7,15 @@ const backendDir = path.resolve(__dirname, "..");
 dotenv.config({ path: path.join(backendDir, ".env") });
 dotenv.config({ path: path.join(process.cwd(), ".env") });
 
+/* DEBUG HERE */
+console.log("ENV DEBUG:");
+console.log("cwd:", process.cwd());
+console.log("backendDir:", backendDir);
+console.log("GROQ_API_KEY:", process.env.GROQ_API_KEY);
+console.log("SERP_API_KEY:", process.env.SERP_API_KEY);
+console.log("--------------------------------");
+
+
 function envSet(name: string, altName?: string): boolean {
   const v = process.env[name] ?? (altName ? process.env[altName] : undefined);
   return typeof v === "string" && v.trim().length > 0 && !v.includes("your_");
