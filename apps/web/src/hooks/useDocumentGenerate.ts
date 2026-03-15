@@ -1,3 +1,5 @@
+// Legacy reference kept during the Mastra migration. ChatContext now calls the
+// documentWorkflow over HTTP instead of using this direct frontend pipeline.
 import type { SerpResult } from "@/hooks/useSerpSearch";
 
 export type GeneratedDoc = {

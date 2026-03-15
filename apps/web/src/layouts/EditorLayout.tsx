@@ -14,14 +14,19 @@ export function EditorLayout() {
       <DocumentEditorProvider>
         <div className="flex h-screen w-screen overflow-hidden bg-slate-100">
           <DocumentOutlinePanel />
-          <div className="flex-1 flex">
+          <div className="relative flex flex-1">
             <DocumentEditorPanel
               topBarAction={
                 <FloatingChatBar
                   isOpen={isSidePanelOpen}
-                  onToggle={() => setIsSidePanelOpen((prev) => !prev)}
+                  onOpen={() => setIsSidePanelOpen(true)}
                 />
               }
+            />
+            <FloatingChatBar
+              variant="pill"
+              isOpen={isSidePanelOpen}
+              onOpen={() => setIsSidePanelOpen(true)}
             />
           </div>
           {isSidePanelOpen ? (

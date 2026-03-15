@@ -7,12 +7,12 @@ import {
   type ReactNode,
 } from "react";
 
-import {
-  generateDocument,
-  type GeneratedDoc,
-} from "@/hooks/useDocumentGenerate";
-import { planSearchQueries } from "@/hooks/useSearchPlanner";
-import { searchWebQueries, type SerpResult } from "@/hooks/useSerpSearch";
+// Legacy references kept during the Mastra migration:
+// import { generateDocument } from "@/hooks/useDocumentGenerate";
+// import { planSearchQueries } from "@/hooks/useSearchPlanner";
+// import { searchWebQueries } from "@/hooks/useSerpSearch";
+import type { GeneratedDoc } from "@/hooks/useDocumentGenerate";
+import type { SerpResult } from "@/hooks/useSerpSearch";
 
 type StepStatus = "pending" | "active" | "done";
 
@@ -93,6 +93,63 @@ function wait(ms: number) {
   });
 }
 
+function splitJsonRecords(value: string) {
+  return value
+    .split("\u001e")
+    .map((part) => part.trim())
+    .filter((part) => part.length > 0);
+}
+
+type WorkflowStreamChunk =
+  | {
+      type: "data-document-token";
+      data: { token: string };
+    }
+  | {
+      type: "data-document-result";
+      data: DocumentWorkflowResult;
+    }
+  | {
+      type: string;
+      data?: unknown;
+    };
+
+type DocumentWorkflowResult = {
+  title: string;
+  markdown: string;
+  sources: SerpResult[];
+};
+
+function isDocumentTokenChunk(chunk: WorkflowStreamChunk): chunk is {
+  type: "data-document-token";
+  data: { token: string };
+} {
+  return (
+    chunk.type === "data-document-token" &&
+    typeof chunk.data === "object" &&
+    chunk.data !== null &&
+    "token" in chunk.data &&
+    typeof chunk.data.token === "string"
+  );
+}
+
+function isDocumentResultChunk(chunk: WorkflowStreamChunk): chunk is {
+  type: "data-document-result";
+  data: DocumentWorkflowResult;
+} {
+  return (
+    chunk.type === "data-document-result" &&
+    typeof chunk.data === "object" &&
+    chunk.data !== null &&
+    "title" in chunk.data &&
+    "markdown" in chunk.data &&
+    "sources" in chunk.data &&
+    typeof chunk.data.title === "string" &&
+    typeof chunk.data.markdown === "string" &&
+    Array.isArray(chunk.data.sources)
+  );
+}
+
 export function ChatProvider({ children }: { children: ReactNode }) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -150,35 +207,114 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     try {
       await wait(600);
 
-      const plannedSearch = await planSearchQueries(trimmedContent);
-      if (import.meta.env.DEV) {
-        console.log("final planned queries", plannedSearch.queries);
-      }
-
       updateAssistantMessage(assistantMessageId, {
         steps: markSearchStepActive(getInitialSteps()),
       });
 
-      const searchResults = await searchWebQueries(plannedSearch.queries);
-      if (import.meta.env.DEV) {
-        console.log("final attached source count", searchResults.length);
-      }
-      updateAssistantMessage(assistantMessageId, {
-        sources: searchResults,
-        steps: markGenerateStepActive(markSearchStepActive(getInitialSteps())),
+      const runResponse = await fetch("/api/mastra/workflows/documentWorkflow/create-run", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({}),
       });
 
-      await wait(400);
+      if (!runResponse.ok) {
+        throw new Error(
+          `Mastra workflow run creation failed with ${runResponse.status} ${runResponse.statusText}`
+        );
+      }
 
-      const generatedDoc = await generateDocument(
-        trimmedContent,
-        searchResults,
-        (token) => {
-          appendAssistantToken(assistantMessageId, token);
+      const runData = (await runResponse.json()) as { runId?: string };
+      if (!runData.runId) {
+        throw new Error("Mastra workflow run creation did not return a runId.");
+      }
+
+      const workflowRequest = fetch(
+        `/api/mastra/workflows/documentWorkflow/stream?runId=${encodeURIComponent(runData.runId)}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            inputData: {
+              query: trimmedContent,
+            },
+          }),
         }
       );
 
+      await wait(400);
+
       updateAssistantMessage(assistantMessageId, {
+        steps: markGenerateStepActive(markSearchStepActive(getInitialSteps())),
+      });
+
+      const response = await workflowRequest;
+      if (!response.ok) {
+        throw new Error(
+          `Mastra workflow request failed with ${response.status} ${response.statusText}`
+        );
+      }
+
+      if (!response.body) {
+        throw new Error("Mastra workflow stream response body was missing.");
+      }
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let bufferedText = "";
+      let finalResult: DocumentWorkflowResult | null = null;
+
+      while (true) {
+        const { done, value } = await reader.read();
+        bufferedText += decoder.decode(value, { stream: !done });
+
+        const records = splitJsonRecords(bufferedText);
+        bufferedText = bufferedText.endsWith("\u001e") ? "" : records.pop() ?? "";
+
+        for (const record of records) {
+          const chunk = JSON.parse(record) as WorkflowStreamChunk;
+
+          if (isDocumentTokenChunk(chunk)) {
+            appendAssistantToken(assistantMessageId, chunk.data.token);
+          }
+
+          if (isDocumentResultChunk(chunk)) {
+            finalResult = chunk.data;
+          }
+        }
+
+        if (done) {
+          break;
+        }
+      }
+
+      const trailingRecords = splitJsonRecords(bufferedText);
+      for (const record of trailingRecords) {
+        const chunk = JSON.parse(record) as WorkflowStreamChunk;
+
+        if (isDocumentTokenChunk(chunk)) {
+          appendAssistantToken(assistantMessageId, chunk.data.token);
+        }
+
+        if (isDocumentResultChunk(chunk)) {
+          finalResult = chunk.data;
+        }
+      }
+
+      if (!finalResult) {
+        throw new Error("Mastra workflow stream completed without a final document result.");
+      }
+
+      const generatedDoc: GeneratedDoc = {
+        title: finalResult.title,
+        markdown: finalResult.markdown,
+      };
+
+      updateAssistantMessage(assistantMessageId, {
+        sources: finalResult.sources,
         doc: generatedDoc,
         steps: markAllStepsDone(markGenerateStepActive(markSearchStepActive(getInitialSteps()))),
       });
