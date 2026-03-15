@@ -116,7 +116,7 @@ export function DocumentEditor() {
           Add page
         </button>
       </header>
-      <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden bg-slate-200/60 flex justify-center py-8 px-4 document-scroll">
+      <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden bg-white flex justify-center py-8 px-4 document-scroll">
         <div className="document-page shadow-xl shrink-0 rounded-2xl overflow-hidden" style={{ width: "210mm", minHeight: "297mm" }}>
           <CKEditor
             editor={ClassicEditor}
