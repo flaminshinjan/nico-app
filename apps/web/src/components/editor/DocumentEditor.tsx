@@ -80,29 +80,44 @@ export function DocumentEditor() {
     }
   }, [data]);
 
+  const handleAddPageBreak = useCallback(() => {
+    const pageBreakHtml = '<hr class="page-break" />';
+    if (editorRef.current) {
+      const html = editorRef.current.getData();
+      editorRef.current.setData(html + pageBreakHtml);
+    } else {
+      setData((prev) => prev + pageBreakHtml);
+    }
+    notifyContentChange();
+  }, [notifyContentChange]);
+
   return (
     <div className="flex-1 min-h-0 flex flex-col">
-      <div className="flex items-center gap-2 px-3 py-2 border-b border-slate-200 bg-slate-50 shrink-0">
+      <header className="flex items-center gap-2 px-4 py-2.5 border-b border-slate-200 bg-white shrink-0 shadow-sm rounded-b-2xl">
         <button
           type="button"
           onClick={handleImportDocx}
-          className="rounded px-3 py-1.5 text-sm font-medium text-slate-700 bg-white border border-slate-300 hover:bg-slate-50"
+          className="rounded-xl px-3 py-1.5 text-sm font-medium text-slate-700 bg-slate-100 border border-slate-200 hover:bg-slate-200 transition-colors"
         >
           Import .docx
         </button>
         <button
           type="button"
           onClick={handleDownloadDocx}
-          className="rounded px-3 py-1.5 text-sm font-medium text-white bg-slate-800 hover:bg-slate-700"
+          className="rounded-xl px-3 py-1.5 text-sm font-medium text-white bg-slate-800 hover:bg-slate-700 transition-colors"
         >
           Download as .docx
         </button>
-      </div>
-      <div className="flex-1 min-h-0 overflow-auto bg-white flex justify-center py-8 px-4">
-        <div
-          className="document-page shadow-lg shrink-0"
-          style={{ width: "210mm", height: "297mm" }}
+        <button
+          type="button"
+          onClick={handleAddPageBreak}
+          className="rounded-xl px-3 py-1.5 text-sm font-medium text-slate-700 bg-slate-100 border border-slate-200 hover:bg-slate-200 transition-colors"
         >
+          Add page
+        </button>
+      </header>
+      <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden bg-slate-200/60 flex justify-center py-8 px-4 document-scroll">
+        <div className="document-page shadow-xl shrink-0 rounded-2xl overflow-hidden" style={{ width: "210mm", minHeight: "297mm" }}>
           <CKEditor
             editor={ClassicEditor}
             data={data}

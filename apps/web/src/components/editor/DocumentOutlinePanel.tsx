@@ -8,11 +8,11 @@ export function DocumentOutlinePanel() {
 
   if (isCollapsed) {
     return (
-      <div className="w-12 flex-shrink-0 bg-white border-r border-slate-200 flex flex-col items-center py-4">
+      <div className="w-12 flex-shrink-0 bg-white border-r border-slate-200 flex flex-col items-center py-4 rounded-r-2xl">
         <button
           type="button"
           onClick={() => setIsCollapsed(false)}
-          className="p-2 text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded"
+          className="p-2 text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-xl"
           aria-label="Expand outline panel"
         >
           <svg
@@ -34,15 +34,15 @@ export function DocumentOutlinePanel() {
   }
 
   return (
-    <div className="w-64 flex-shrink-0 bg-white border-r border-slate-200 flex flex-col">
-      <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200">
+    <div className="w-64 flex-shrink-0 bg-white border-r border-slate-200 flex flex-col rounded-r-2xl overflow-hidden">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 rounded-tr-2xl">
         <span className="text-sm font-medium text-slate-800">
           Document tabs
         </span>
         <div className="flex items-center gap-1">
           <button
             type="button"
-            className="p-1.5 text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded"
+            className="p-1.5 text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-lg"
             aria-label="Add document"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -52,7 +52,7 @@ export function DocumentOutlinePanel() {
           <button
             type="button"
             onClick={() => setIsCollapsed(true)}
-            className="p-1.5 text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded"
+            className="p-1.5 text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-lg"
             aria-label="Collapse panel"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -62,13 +62,13 @@ export function DocumentOutlinePanel() {
         </div>
       </div>
       <div className="px-2 py-2">
-        <div className="flex items-center gap-2 px-2 py-1.5 bg-slate-100 rounded">
+        <div className="flex items-center gap-2 px-2 py-1.5 bg-slate-100 rounded-xl">
           <span className="text-sm text-slate-700 truncate flex-1" title={tabLabel}>
             {tabLabel}
           </span>
           <button
             type="button"
-            className="p-1 text-slate-400 hover:text-slate-600"
+            className="p-1 text-slate-400 hover:text-slate-600 rounded-lg"
             aria-label="Tab options"
           >
             <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">

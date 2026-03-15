@@ -21,14 +21,23 @@ body {
 }
 
 .document-page .ck-editor__top {
+  position: sticky;
+  top: 0;
+  z-index: 10;
   padding: 0.5rem 0.75rem;
   border: none;
-  border-bottom: none;
+  border-bottom: 1px solid #e2e8f0;
   background: #f8fafc;
+  border-radius: 0.5rem 0.5rem 0 0;
+}
+
+.document-page .ck-toolbar .ck-toolbar__items .ck-button,
+.document-page .ck-toolbar .ck-toolbar__items .ck-dropdown__button {
+  border-radius: 0.375rem;
 }
 
 .document-page {
-  height: 297mm;
+  min-height: 297mm;
   display: flex;
   flex-direction: column;
 }
@@ -37,7 +46,7 @@ body {
   display: flex;
   flex-direction: column;
   flex: 1;
-  min-height: 0;
+  min-height: 297mm;
 }
 
 .document-page .ck-editor__main {
@@ -53,8 +62,7 @@ body {
   --doc-margin: 2.5cm;
   width: 100%;
   flex: 1;
-  min-height: 0;
-  overflow-y: auto;
+  min-height: calc(297mm - 3rem);
   padding: var(--doc-margin) !important;
   border: none !important;
   outline: none !important;
@@ -115,4 +123,20 @@ body {
 
 .document-page .ck-editor__editable li {
   margin: 0.15em 0;
+}
+
+.document-page .ck-editor__editable hr.page-break {
+  margin: 2rem 0;
+  border: none;
+  border-top: 2px dashed #cbd5e1;
+  height: 0;
+}
+
+.document-page .ck-editor__editable hr.page-break::after {
+  content: "Page break";
+  display: block;
+  text-align: center;
+  font-size: 0.75rem;
+  color: #94a3b8;
+  margin-top: 0.5rem;
 }

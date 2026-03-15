@@ -40,7 +40,11 @@ function StreamingPreview({ content }: { content: string }) {
   );
 }
 
-export function AISidePanel() {
+type AISidePanelProps = {
+  onClose: () => void;
+};
+
+export function AISidePanel({ onClose }: AISidePanelProps) {
   const { messages, sendMessage, isLoading } = useChat();
   const { embedGeneratedContent } = useDocumentEditor();
   const [inputValue, setInputValue] = useState("");
@@ -83,46 +87,27 @@ export function AISidePanel() {
   }
 
   return (
-    <div className="w-96 flex-shrink-0 bg-slate-100 border-l border-slate-200 flex flex-col">
-      <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 bg-white">
-        <span className="text-sm font-medium text-slate-800">Cursor for Word</span>
+    <div className="w-[400px] flex-shrink-0 flex flex-col bg-white border-l border-slate-200 rounded-l-2xl shadow-lg overflow-hidden">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 bg-slate-50/80 rounded-tl-2xl">
+        <span className="text-sm font-semibold text-slate-800">Cursor for Word</span>
         <div className="flex items-center gap-1">
           <button
             type="button"
-            className="p-1.5 text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded"
+            className="p-1.5 text-slate-500 hover:text-slate-700 hover:bg-slate-200 rounded-lg transition-colors"
             aria-label="Info"
           >
-            <svg
-              className="w-4 h-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
           </button>
           <button
             type="button"
-            className="p-1.5 text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded"
+            onClick={onClose}
+            className="p-1.5 text-slate-500 hover:text-slate-700 hover:bg-slate-200 rounded-lg transition-colors"
             aria-label="Close panel"
           >
-            <svg
-              className="w-4 h-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
         </div>
@@ -186,9 +171,9 @@ export function AISidePanel() {
       ) : null}
       <form
         onSubmit={handleSubmit}
-        className="border-t border-slate-200 bg-white px-4 py-3"
+        className="border-t border-slate-200 bg-slate-50/80 px-4 py-3"
       >
-        <div className="flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
+        <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 shadow-sm">
           <input
             type="text"
             value={inputValue}
@@ -199,7 +184,7 @@ export function AISidePanel() {
           <button
             type="submit"
             disabled={isLoading || inputValue.trim().length === 0}
-            className="rounded px-2 py-1 text-sm font-medium text-slate-600 transition hover:text-slate-800 disabled:cursor-not-allowed disabled:text-slate-300"
+            className="rounded-lg px-2 py-1 text-sm font-medium text-slate-600 transition hover:text-slate-800 disabled:cursor-not-allowed disabled:text-slate-300"
           >
             Send
           </button>

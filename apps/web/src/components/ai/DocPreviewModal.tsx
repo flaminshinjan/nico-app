@@ -18,7 +18,7 @@ export function DocPreviewModal({ doc, onClose, onEmbed }: DocPreviewModalProps)
     >
       <div className="mx-auto my-8 flex max-h-[calc(100vh-4rem)] max-w-3xl">
         <div
-          className="flex w-full flex-col overflow-hidden rounded-xl bg-white shadow-2xl"
+          className="flex w-full flex-col overflow-hidden rounded-2xl bg-white shadow-2xl"
           onClick={(event) => event.stopPropagation()}
           role="dialog"
           aria-modal="true"
@@ -36,7 +36,7 @@ export function DocPreviewModal({ doc, onClose, onEmbed }: DocPreviewModalProps)
                     onEmbed();
                     onClose();
                   }}
-                  className="rounded bg-slate-800 px-3 py-1.5 text-sm font-medium text-white transition hover:bg-slate-700"
+                  className="rounded-lg bg-slate-800 px-3 py-1.5 text-sm font-medium text-white transition hover:bg-slate-700"
                 >
                   Embed in document
                 </button>
@@ -44,7 +44,7 @@ export function DocPreviewModal({ doc, onClose, onEmbed }: DocPreviewModalProps)
               <button
                 type="button"
                 onClick={onClose}
-                className="rounded p-1.5 text-slate-500 hover:bg-slate-100 hover:text-slate-700"
+                className="rounded-lg p-1.5 text-slate-500 hover:bg-slate-100 hover:text-slate-700"
                 aria-label="Close preview"
               >
               <svg
