@@ -106,22 +106,15 @@ function buildFallbackQuery(prompt: string) {
 
 export async function planSearchQueries(prompt: string): Promise<PlannedSearch> {
   const fallback = { queries: [buildFallbackQuery(prompt)] };
-  const apiKey = import.meta.env.VITE_GROQ_API_KEY;
-
-  if (!apiKey) {
-    if (import.meta.env.DEV) {
-      console.log("search planner fallback: missing VITE_GROQ_API_KEY");
-    }
-    return fallback;
-  }
-
+  const { getApiUrl } = await import("@/lib/api");
   try {
-    const response = await fetch("/api/groq/openai/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-      },
+    const response = await fetch(
+      `${getApiUrl()}/api/groq/openai/v1/chat/completions`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
       body: JSON.stringify({
         model: "llama-3.3-70b-versatile",
         max_tokens: 256,
@@ -137,7 +130,8 @@ export async function planSearchQueries(prompt: string): Promise<PlannedSearch> 
           },
         ],
       }),
-    });
+      }
+    );
 
     if (!response.ok) {
       throw new Error(

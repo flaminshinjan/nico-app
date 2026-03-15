@@ -7,6 +7,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { getApiUrl } from "@/lib/api";
 import type { GeneratedDoc } from "@/hooks/useDocumentGenerate";
 
 export type OutlineItem = {
@@ -44,8 +45,6 @@ const DocumentEditorContext = createContext<
   DocumentEditorContextValue | undefined
 >(undefined);
 
-const getApiBaseUrl = () => window.location.origin;
-
 export function DocumentEditorProvider({ children }: { children: ReactNode }) {
   const editorApiRef = useRef<EditorApi | null>(null);
   const [isEmbedding, setIsEmbedding] = useState(false);
@@ -73,7 +72,7 @@ export function DocumentEditorProvider({ children }: { children: ReactNode }) {
   const embedGeneratedContent = useCallback(async (doc: GeneratedDoc) => {
     setIsEmbedding(true);
     try {
-      const res = await fetch(`${getApiBaseUrl()}/api/documents/markdown-to-html`, {
+      const res = await fetch(`${getApiUrl()}/api/documents/markdown-to-html`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ markdown: doc.markdown }),

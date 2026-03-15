@@ -131,19 +131,16 @@ export async function generateDocument(
   sources: SerpResult[],
   onToken: (token: string) => void
 ): Promise<GeneratedDoc> {
-  const apiKey = import.meta.env.VITE_GROQ_API_KEY;
-  if (!apiKey) {
-    throw new Error("VITE_GROQ_API_KEY is not configured.");
-  }
-
+  const { getApiUrl } = await import("@/lib/api");
   const sourcesBlock = buildSourcesBlock(sources);
-  const response = await fetch("/api/groq/openai/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
+  const response = await fetch(
+    `${getApiUrl()}/api/groq/openai/v1/chat/completions`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
       model: "llama-3.3-70b-versatile",
       max_tokens: 2048,
       stream: true,
@@ -159,7 +156,8 @@ export async function generateDocument(
         },
       ],
     }),
-  });
+    }
+  );
 
   if (!response.ok) {
     throw new Error(

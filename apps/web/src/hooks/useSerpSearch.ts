@@ -72,21 +72,15 @@ function toSerpResult(raw: unknown): SerpResult | null {
 }
 
 async function searchWebInternal(query: string): Promise<SerpResult[]> {
-  const apiKey = import.meta.env.VITE_SERP_API_KEY;
-
-  if (!apiKey) {
-    console.error("VITE_SERP_API_KEY is not configured.");
-    return [];
-  }
-
+  const { getApiUrl } = await import("@/lib/api");
   try {
     const searchParams = new URLSearchParams({
       q: query,
       num: "4",
-      api_key: apiKey,
     });
-
-    const response = await fetch(`/api/serp/search.json?${searchParams.toString()}`);
+    const response = await fetch(
+      `${getApiUrl()}/api/serp/search.json?${searchParams.toString()}`
+    );
     if (!response.ok) {
       console.error("SERP API request failed.", response.status, response.statusText);
       return [];

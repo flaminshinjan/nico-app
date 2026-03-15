@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { CKEditor } from "@ckeditor/ckeditor5-react";
 import ClassicEditor from "@ckeditor/ckeditor5-build-classic";
 import mammoth from "mammoth";
+import { getApiUrl } from "@/lib/api";
 import { useDocumentEditor, parseHeadingsFromHtml } from "@/context/DocumentEditorContext";
 
 type EditorInstance = {
@@ -61,7 +62,7 @@ export function DocumentEditor() {
   const handleDownloadDocx = useCallback(async () => {
     const html = editorRef.current?.getData() ?? data;
     try {
-      const res = await fetch(`${window.location.origin}/api/documents/html-to-docx`, {
+      const res = await fetch(`${getApiUrl()}/api/documents/html-to-docx`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ html }),

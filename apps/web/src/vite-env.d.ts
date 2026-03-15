@@ -1,8 +1,7 @@
 /// <reference types="vite/client" />
 
 interface ImportMetaEnv {
-  readonly VITE_SERP_API_KEY?: string;
-  readonly VITE_GROQ_API_KEY?: string;
+  readonly VITE_API_URL?: string;
 }
 
 interface ImportMeta {
