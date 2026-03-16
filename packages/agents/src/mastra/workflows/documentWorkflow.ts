@@ -2,18 +2,16 @@ import { createStep, createWorkflow } from "@mastra/core/workflows";
 import { z } from "zod";
 import { documentAgent } from "../agents/documentAgent";
 import { serpTool } from "../tools/serpTool";
-
-const serpResultSchema = z.object({
-  title: z.string(),
-  url: z.string(),
-  snippet: z.string(),
-  favicon: z.string().optional(),
-  displayed_link: z.string().optional(),
-});
+import { buildDocumentGenerationPrompt } from "../utils/documentPrompt";
+import { serpResultSchema } from "../utils/serp";
 
 const documentResultSchema = z.object({
   title: z.string(),
   markdown: z.string(),
+});
+
+const workflowStageSchema = z.object({
+  stage: z.enum(["evaluating", "searching", "generating"]),
 });
 
 function stripJsonFences(value: string) {
@@ -49,7 +47,12 @@ const searchStep = createStep({
     query: z.string(),
     results: z.array(serpResultSchema),
   }),
-  execute: async ({ inputData }) => {
+  execute: async ({ inputData, writer }) => {
+    await writer.custom({
+      type: "data-workflow-stage",
+      data: workflowStageSchema.parse({ stage: "searching" }),
+    });
+
     const executeSerpTool = serpTool.execute;
     if (!executeSerpTool) {
       throw new Error("serpTool.execute is not defined.");
@@ -72,15 +75,13 @@ const generateStep = createStep({
     sources: z.array(serpResultSchema),
   }),
   execute: async ({ inputData, writer }) => {
-    const sourcesBlock = inputData.results
-      .map(
-        (result, index) =>
-          `Source ${index + 1}: ${result.title}\nURL: ${result.url}\nSnippet: ${result.snippet}`
-      )
-      .join("\n\n");
+    await writer.custom({
+      type: "data-workflow-stage",
+      data: workflowStageSchema.parse({ stage: "generating" }),
+    });
 
     const response = await documentAgent.stream(
-      `${inputData.query}\n\nSources:\n${sourcesBlock}`
+      buildDocumentGenerationPrompt(inputData.query, inputData.results)
     );
 
     await readTextStream(response.textStream, async (token) => {
