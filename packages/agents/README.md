@@ -1,6 +1,28 @@
 # agents
 
-Welcome to your new [Mastra](https://mastra.ai/) project! We're excited to see what you'll build.
+Mastra agents and workflows for the nico-app (e.g. document generation). [Mastra](https://mastra.ai/) docs: [project structure](https://mastra.ai/docs/getting-started/project-structure).
+
+**Folder structure:**
+
+```
+src/mastra/
+├── index.ts           # Mastra instance (agents + workflows)
+├── agents/            # LLM agents
+│   ├── index.ts
+│   └── documentAgent.ts
+├── tools/             # Reusable tools agents can call
+│   ├── index.ts
+│   └── serpTool.ts
+├── workflows/         # Multi-step workflows
+│   ├── index.ts
+│   └── documentWorkflow.ts
+├── schemas/           # Shared Zod schemas
+│   ├── index.ts
+│   ├── document.ts
+│   └── serp.ts
+└── lib/               # Shared helpers
+    └── stream.ts
+``` We're excited to see what you'll build.
 
 ## Getting Started
 

@@ -1,6 +1,6 @@
 import { groq } from "@ai-sdk/groq";
 import { Agent } from "@mastra/core/agent";
-import { serpTool } from "../tools/serpTool";
+import { serpTool } from "../tools";
 
 export const documentAgent = new Agent({
   id: "documentAgent",

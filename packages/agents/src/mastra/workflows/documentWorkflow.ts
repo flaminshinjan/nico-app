@@ -1,46 +1,9 @@
 import { createStep, createWorkflow } from "@mastra/core/workflows";
 import { z } from "zod";
-import { documentAgent } from "../agents/documentAgent";
-import { serpTool } from "../tools/serpTool";
-
-const serpResultSchema = z.object({
-  title: z.string(),
-  url: z.string(),
-  snippet: z.string(),
-  favicon: z.string().optional(),
-  displayed_link: z.string().optional(),
-});
-
-const documentResultSchema = z.object({
-  title: z.string(),
-  markdown: z.string(),
-});
-
-function stripJsonFences(value: string) {
-  return value.replace(/```json|```/g, "").trim();
-}
-
-async function readTextStream(
-  stream: ReadableStream<string>,
-  onToken: (token: string) => Promise<void>
-) {
-  const reader = stream.getReader();
-
-  try {
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) {
-        break;
-      }
-
-      if (value) {
-        await onToken(value);
-      }
-    }
-  } finally {
-    reader.releaseLock();
-  }
-}
+import { documentAgent } from "../agents";
+import { serpTool } from "../tools";
+import { documentResultSchema, serpResultSchema } from "../schemas";
+import { readTextStream, stripJsonFences } from "../lib/stream";
 
 const searchStep = createStep({
   id: "search",
@@ -51,10 +14,7 @@ const searchStep = createStep({
   }),
   execute: async ({ inputData }) => {
     const executeSerpTool = serpTool.execute;
-    if (!executeSerpTool) {
-      throw new Error("serpTool.execute is not defined.");
-    }
-
+    if (!executeSerpTool) throw new Error("serpTool.execute is not defined.");
     const { results } = await executeSerpTool({ query: inputData.query }, {});
     return { query: inputData.query, results };
   },
@@ -91,7 +51,9 @@ const generateStep = createStep({
     });
 
     const fullOutput = await response.getFullOutput();
-    const parsed = documentResultSchema.parse(JSON.parse(stripJsonFences(fullOutput.text)));
+    const parsed = documentResultSchema.parse(
+      JSON.parse(stripJsonFences(fullOutput.text))
+    );
     const finalResult = {
       title: parsed.title,
       markdown: parsed.markdown,
