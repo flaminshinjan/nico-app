@@ -1,13 +1,6 @@
 import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
-
-const serpResultSchema = z.object({
-  title: z.string(),
-  url: z.string(),
-  snippet: z.string(),
-  favicon: z.string().optional(),
-  displayed_link: z.string().optional(),
-});
+import { serpResultSchema } from "../schemas";
 
 export const serpTool = createTool({
   id: "serp-search",
@@ -37,16 +30,10 @@ export const serpTool = createTool({
 
     const results = organic
       .map((result: unknown) => {
-        if (typeof result !== "object" || result === null) {
-          return null;
-        }
-
+        if (typeof result !== "object" || result === null) return null;
         const raw = result as Record<string, unknown>;
         const url = typeof raw.link === "string" ? raw.link : null;
-        if (!url) {
-          return null;
-        }
-
+        if (!url) return null;
         return {
           title: typeof raw.title === "string" ? raw.title : url,
           url,
@@ -61,7 +48,7 @@ export const serpTool = createTool({
             typeof raw.displayed_link === "string" ? raw.displayed_link : undefined,
         };
       })
-      .filter((result): result is z.infer<typeof serpResultSchema> => result !== null)
+      .filter((r): r is z.infer<typeof serpResultSchema> => r !== null)
       .slice(0, 4);
 
     return { results };

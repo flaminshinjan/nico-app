@@ -1,24 +1,25 @@
-import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { CKEditor } from "@ckeditor/ckeditor5-react";
 import ClassicEditor from "@ckeditor/ckeditor5-build-classic";
 import mammoth from "mammoth";
 import { getApiUrl } from "@/lib/api";
-import { useDocumentEditor, parseHeadingsFromHtml } from "@/context/DocumentEditorContext";
+import {
+  useDocumentEditor,
+  parseHeadingsFromHtml,
+} from "@/context/DocumentEditorContext";
 
 type EditorInstance = {
   setData: (data: string) => void;
   getData: () => string;
 };
 
-type DocumentEditorProps = {
-  topBarAction?: ReactNode;
-};
-
-export function DocumentEditor({ topBarAction }: DocumentEditorProps) {
+export function DocumentEditor() {
   const { registerEditor, notifyContentChange } = useDocumentEditor();
   const editorRef = useRef<EditorInstance | null>(null);
   const unregisterRef = useRef<(() => void) | null>(null);
-  const [data, setData] = useState("<p>Start typing or import a .docx file.</p>");
+  const [data, setData] = useState(
+    "<p>Start typing or import a .docx file.</p>"
+  );
 
   const handleEditorReady = useCallback(
     (editor: EditorInstance) => {
@@ -51,11 +52,8 @@ export function DocumentEditor({ topBarAction }: DocumentEditorProps) {
         const arrayBuffer = await file.arrayBuffer();
         const result = await mammoth.convertToHtml({ arrayBuffer });
         const html = result.value;
-        if (editorRef.current) {
-          editorRef.current.setData(html || "<p></p>");
-        } else {
-          setData(html || "<p></p>");
-        }
+        if (editorRef.current) editorRef.current.setData(html || "<p></p>");
+        else setData(html || "<p></p>");
       } catch (err) {
         console.error("Failed to import .docx:", err);
       }
@@ -97,32 +95,57 @@ export function DocumentEditor({ topBarAction }: DocumentEditorProps) {
 
   return (
     <div className="flex-1 min-h-0 flex flex-col">
-      <header className="flex items-center gap-2 px-4 py-2.5 border-b border-slate-200 bg-white shrink-0 shadow-sm rounded-b-2xl">
+      {/* Top toolbar */}
+      <header className="flex items-center gap-2 px-5 h-12 shrink-0">
         <button
           type="button"
           onClick={handleImportDocx}
-          className="rounded-xl px-3 py-1.5 text-sm font-medium text-slate-700 bg-slate-100 border border-slate-200 hover:bg-slate-200 transition-colors"
+          className="h-8 px-3.5 text-sm font-medium text-content-secondary bg-transparent rounded-md hover:bg-canvas-hover hover:text-content-primary transition-all"
         >
           Import .docx
         </button>
         <button
           type="button"
           onClick={handleDownloadDocx}
-          className="rounded-xl px-3 py-1.5 text-sm font-medium text-white bg-slate-800 hover:bg-slate-700 transition-colors"
+          className="h-8 px-3.5 text-sm font-medium text-content-inverse bg-accent rounded-md hover:brightness-110 transition-all"
         >
           Download as .docx
         </button>
+        <div className="flex-1" />
         <button
           type="button"
           onClick={handleAddPageBreak}
-          className="rounded-xl px-3 py-1.5 text-sm font-medium text-slate-700 bg-slate-100 border border-slate-200 hover:bg-slate-200 transition-colors"
+          className="w-8 h-8 flex items-center justify-center text-content-tertiary rounded-md hover:bg-canvas-hover hover:text-content-primary transition-all"
+          aria-label="Add page"
         >
-          Add page
+          <svg
+            className="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M12 4v16m8-8H4"
+            />
+          </svg>
         </button>
-        {topBarAction ? <div className="ml-auto">{topBarAction}</div> : null}
       </header>
-      <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden bg-white flex justify-center py-8 px-4 document-scroll">
-        <div className="document-page shadow-xl shrink-0 rounded-2xl overflow-hidden" style={{ width: "210mm", minHeight: "297mm" }}>
+
+      {/* Document scroll area */}
+      <div
+        className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden flex justify-center py-10 px-4"
+        style={{
+          background:
+            "linear-gradient(to bottom, var(--editor-gradient-start) 0%, var(--bg-surface) 120px)",
+        }}
+      >
+        <div
+          className="document-page shrink-0"
+          style={{ width: 760, minHeight: 1056 }}
+        >
           <CKEditor
             editor={ClassicEditor}
             data={data}
@@ -131,9 +154,7 @@ export function DocumentEditor({ topBarAction }: DocumentEditorProps) {
               setData(editor.getData());
               notifyContentChange();
             }}
-            config={{
-              placeholder: "Start typing or paste content…",
-            }}
+            config={{ placeholder: "Start typing or paste content…" }}
           />
         </div>
       </div>

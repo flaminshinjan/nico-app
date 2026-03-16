@@ -1,0 +1,1 @@
+export { documentAgent } from "./documentAgent";

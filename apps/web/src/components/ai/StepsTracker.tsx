@@ -1,3 +1,4 @@
+import { motion } from "framer-motion";
 import type { Step } from "@/context/ChatContext";
 
 type StepsTrackerProps = {
@@ -6,58 +7,53 @@ type StepsTrackerProps = {
 
 function DoneIcon() {
   return (
-    <svg
-      className="h-4 w-4 text-green-500"
-      fill="none"
-      stroke="currentColor"
-      viewBox="0 0 24 24"
+    <motion.div
+      initial={{ scale: 0 }}
+      animate={{ scale: 1 }}
+      transition={{ type: "spring", stiffness: 400, damping: 15 }}
+      className="w-4 h-4 flex items-center justify-center flex-shrink-0"
+      style={{ filter: "drop-shadow(0 0 6px rgba(74,222,128,0.3))" }}
     >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-        d="m5 13 4 4L19 7"
-      />
-    </svg>
+      <svg
+        className="w-4 h-4 text-accent-success"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2.5}
+          d="m5 13 4 4L19 7"
+        />
+      </svg>
+    </motion.div>
   );
 }
 
 function ActiveIcon() {
-  return (
-    <svg
-      className="h-4 w-4 animate-spin text-slate-400"
-      fill="none"
-      stroke="currentColor"
-      viewBox="0 0 24 24"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-        d="M20 12a8 8 0 0 0-8-8"
-      />
-    </svg>
-  );
+  return <div className="spinner" />;
 }
 
 function PendingIcon() {
   return (
-    <svg
-      className="h-4 w-4 text-slate-300"
-      fill="none"
-      stroke="currentColor"
-      viewBox="0 0 24 24"
-    >
-      <circle cx="12" cy="12" r="7" strokeWidth={2} />
-    </svg>
+    <div className="w-4 h-4 flex items-center justify-center flex-shrink-0">
+      <div className="w-1.5 h-1.5 rounded-full bg-content-tertiary" />
+    </div>
   );
 }
 
 export function StepsTracker({ steps }: StepsTrackerProps) {
   return (
-    <div className="flex flex-col gap-2 py-1">
-      {steps.map((step) => (
-        <div key={step.id} className="flex items-center gap-2">
+    <div className="flex flex-col gap-1.5 pl-1 py-1">
+      {steps.map((step, i) => (
+        <motion.div
+          key={step.id}
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: i * 0.08, duration: 0.2 }}
+          className="flex items-center gap-2"
+        >
           {step.status === "done" ? (
             <DoneIcon />
           ) : step.status === "active" ? (
@@ -65,18 +61,18 @@ export function StepsTracker({ steps }: StepsTrackerProps) {
           ) : (
             <PendingIcon />
           )}
-          <div
-            className={`text-sm ${
+          <span
+            className={`text-xs font-mono ${
               step.status === "done"
-                ? "text-slate-500"
+                ? "text-content-secondary"
                 : step.status === "active"
-                  ? "font-medium text-slate-800"
-                  : "text-slate-400"
+                  ? "text-content-primary"
+                  : "text-content-tertiary"
             }`}
           >
             {step.label}
-          </div>
-        </div>
+          </span>
+        </motion.div>
       ))}
     </div>
   );
