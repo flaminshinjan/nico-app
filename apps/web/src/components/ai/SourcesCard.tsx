@@ -42,8 +42,8 @@ export function SourcesCard({ sources }: SourcesCardProps) {
           return (
             <div
               key={source.url}
-              className="flex-shrink-0 flex flex-col gap-1 p-2 rounded-md border border-line bg-canvas-hover hover:border-line-strong hover:bg-canvas-active transition-all cursor-default"
-              style={{ width: 96, height: 56, transition: "transform 0.15s ease, border-color 0.15s ease, background 0.15s ease" }}
+              className="flex-shrink-0 flex flex-col gap-1 p-2 rounded-md bg-canvas-hover hover:bg-canvas-active transition-all cursor-default"
+              style={{ width: 96, height: 56, transition: "transform 0.15s ease, background 0.15s ease" }}
               onMouseEnter={(e) => { (e.currentTarget as HTMLDivElement).style.transform = "translateY(-2px)"; }}
               onMouseLeave={(e) => { (e.currentTarget as HTMLDivElement).style.transform = "translateY(0)"; }}
             >

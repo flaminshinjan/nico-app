@@ -96,11 +96,11 @@ export function DocumentEditor() {
   return (
     <div className="flex-1 min-h-0 flex flex-col">
       {/* Top toolbar */}
-      <header className="flex items-center gap-2 px-5 h-12 border-b border-line-subtle bg-canvas-elevated/80 backdrop-blur-xl shrink-0">
+      <header className="flex items-center gap-2 px-5 h-12 shrink-0">
         <button
           type="button"
           onClick={handleImportDocx}
-          className="h-8 px-3.5 text-sm font-medium text-content-secondary bg-transparent border border-line rounded-md hover:bg-canvas-hover hover:text-content-primary hover:border-line-strong transition-all"
+          className="h-8 px-3.5 text-sm font-medium text-content-secondary bg-transparent rounded-md hover:bg-canvas-hover hover:text-content-primary transition-all"
         >
           Import .docx
         </button>
@@ -115,7 +115,7 @@ export function DocumentEditor() {
         <button
           type="button"
           onClick={handleAddPageBreak}
-          className="w-8 h-8 flex items-center justify-center text-content-tertiary border border-line rounded-sm hover:bg-canvas-hover hover:text-content-primary hover:border-line-strong transition-all"
+          className="w-8 h-8 flex items-center justify-center text-content-tertiary rounded-md hover:bg-canvas-hover hover:text-content-primary transition-all"
           aria-label="Add page"
         >
           <svg

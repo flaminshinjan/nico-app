@@ -25,7 +25,7 @@ function StreamingPreview({ content }: { content: string }) {
   return (
     <div
       ref={scrollRef}
-      className="max-h-40 overflow-y-auto whitespace-pre-wrap rounded-md border border-line bg-canvas-base p-3 font-mono text-[11px] text-accent"
+      className="max-h-40 overflow-y-auto whitespace-pre-wrap rounded-md bg-canvas-base p-3 font-mono text-[11px] text-accent"
     >
       {content}
     </div>
@@ -44,7 +44,7 @@ function ErrorCard({
       className="shake flex items-start gap-2 rounded-md p-3"
       style={{
         background: "rgba(248,113,113,0.08)",
-        border: "1px solid rgba(248,113,113,0.25)",
+        
       }}
     >
       <span className="text-accent-error text-sm flex-shrink-0 mt-px">⚠</span>
@@ -54,7 +54,7 @@ function ErrorCard({
           <button
             type="button"
             onClick={onRetry}
-            className="mt-1.5 text-[11px] px-2 py-0.5 rounded-sm border border-accent-error/30 text-accent-error hover:bg-accent-error/10 transition-colors"
+            className="mt-1.5 text-[11px] px-2 py-0.5 rounded-sm text-accent-error hover:bg-accent-error/10 transition-colors"
           >
             Retry
           </button>
@@ -126,7 +126,7 @@ export function AISidePanel({ onClose }: AISidePanelProps) {
     <>
       <div className="w-[340px] flex-shrink-0 flex flex-col bg-canvas-elevated rounded-xl overflow-hidden h-full shadow-sm">
         {/* Header */}
-        <div className="flex items-center gap-3 px-4 h-[52px] border-b border-line-subtle shrink-0">
+        <div className="flex items-center gap-3 px-4 h-[52px] shrink-0">
           <div className="pulse-dot" />
           <span className="text-sm font-semibold text-content-primary flex-1">
             Cursor for Word
@@ -191,11 +191,8 @@ export function AISidePanel({ onClose }: AISidePanelProps) {
               >
                 {msg.role === "user" ? (
                   <div
-                    className="max-w-[90%] rounded-lg px-3.5 py-2.5 text-[13.5px] leading-relaxed text-content-primary bg-bubble-user border border-bubble-user-border"
-                    style={{
-                      borderBottomRightRadius: 4,
-                      borderRight: "2px solid var(--accent-primary)",
-                    }}
+                    className="max-w-[90%] rounded-lg px-3.5 py-2.5 text-[13.5px] leading-relaxed text-content-primary bg-bubble-user"
+                    style={{ borderBottomRightRadius: 4 }}
                   >
                     {msg.content}
                   </div>
@@ -249,9 +246,9 @@ export function AISidePanel({ onClose }: AISidePanelProps) {
         {/* Input */}
         <form
           onSubmit={handleSubmit}
-          className="border-t border-line-subtle px-4 py-3.5 shrink-0"
+          className="px-3 py-2.5 shrink-0"
         >
-          <div className="flex items-end gap-2 rounded-xl border border-line bg-canvas-base px-3 py-2.5 focus-within:border-accent focus-within:shadow-[0_0_0_3px_var(--accent-glow)] transition-all">
+          <div className="flex items-center gap-2 rounded-lg border border-line bg-transparent px-3 py-2 focus-within:border-accent transition-all">
             <textarea
               ref={textareaRef}
               value={inputValue}
@@ -259,13 +256,13 @@ export function AISidePanel({ onClose }: AISidePanelProps) {
               onKeyDown={handleKeyDown}
               placeholder="Ask Cursor for Word..."
               rows={1}
-              className="flex-1 bg-transparent text-[13px] text-content-primary outline-none placeholder:text-content-tertiary resize-none font-sans"
-              style={{ minHeight: 22, maxHeight: 160 }}
+              className="flex-1 bg-transparent text-[13px] leading-[20px] text-content-primary outline-none placeholder:text-content-tertiary resize-none font-sans"
+              style={{ minHeight: 20, maxHeight: 160 }}
             />
             <button
               type="submit"
               disabled={isLoading || inputValue.trim().length === 0}
-              className="w-8 h-8 flex-shrink-0 flex items-center justify-center rounded-full bg-accent text-content-inverse transition hover:brightness-110 disabled:opacity-30 disabled:cursor-not-allowed"
+              className="w-7 h-7 flex-shrink-0 flex items-center justify-center rounded-full bg-accent text-content-inverse transition hover:brightness-110 disabled:opacity-30 disabled:cursor-not-allowed"
               aria-label="Send"
             >
               <svg

@@ -11,10 +11,10 @@ export function DocCard({ doc, onClick, isGenerating }: DocCardProps) {
     <button
       type="button"
       onClick={onClick}
-      className={`w-full cursor-pointer overflow-hidden rounded-lg border border-bubble-ai-border bg-bubble-ai text-left transition-all hover:border-line-strong ${isGenerating ? "shimmer" : ""}`}
+      className={`w-full cursor-pointer overflow-hidden rounded-lg bg-bubble-ai text-left transition-all ${isGenerating ? "shimmer" : ""}`}
       style={{ borderBottomLeftRadius: 4 }}
     >
-      <div className="flex items-center gap-2 border-b border-bubble-ai-border px-3 py-2">
+      <div className="flex items-center gap-2 px-3 py-2">
         <svg
           className="h-3.5 w-3.5 text-content-tertiary flex-shrink-0"
           fill="none"
@@ -43,7 +43,7 @@ export function DocCard({ doc, onClick, isGenerating }: DocCardProps) {
           }}
         />
       </div>
-      <div className="border-t border-bubble-ai-border px-3 py-1.5">
+      <div className="px-3 py-1.5">
         <span className="text-[11px] text-accent hover:underline">
           Click to open full preview
         </span>

@@ -45,7 +45,7 @@ function PendingIcon() {
 
 export function StepsTracker({ steps }: StepsTrackerProps) {
   return (
-    <div className="flex flex-col gap-1.5 border-l-2 border-line pl-3 py-1">
+    <div className="flex flex-col gap-1.5 pl-1 py-1">
       {steps.map((step, i) => (
         <motion.div
           key={step.id}

@@ -38,7 +38,7 @@ export function DocumentOutlinePanel() {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
           </svg>
         </button>
-        <div className="w-[14px] h-[18px] rounded-[2px] border border-content-tertiary/40" />
+        <div className="w-[14px] h-[18px] rounded-[2px] bg-content-tertiary/10" />
         <div className="mt-auto">
           <button
             type="button"
@@ -76,7 +76,7 @@ export function DocumentOutlinePanel() {
       <div className="px-3 pb-2">
         <button
           type="button"
-          className="w-full px-3 py-1.5 text-sm text-content-tertiary border border-dashed border-line rounded-md hover:text-content-primary hover:border-solid hover:border-line-strong hover:bg-canvas-hover transition-all"
+          className="w-full px-3 py-1.5 text-sm text-content-tertiary rounded-md hover:text-content-primary hover:bg-canvas-hover transition-all"
         >
           + New page
         </button>
@@ -84,8 +84,8 @@ export function DocumentOutlinePanel() {
 
       {/* Document tabs */}
       <div className="flex-1 px-2 py-1 overflow-y-auto">
-        <div className="flex items-center gap-2 px-2.5 py-2 bg-canvas-active rounded-md border-l-2 border-accent group">
-          <svg className="w-3.5 h-4 text-content-tertiary flex-shrink-0 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+        <div className="flex items-center gap-2 px-2.5 py-2 bg-canvas-active rounded-md group">
+          <svg className="w-3.5 h-4 text-accent flex-shrink-0 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
             <path d="M6 3h8l4 4v14H6V3z" />
             <path d="M14 3v4h4" />
           </svg>
@@ -107,7 +107,7 @@ export function DocumentOutlinePanel() {
       </div>
 
       {/* Bottom actions */}
-      <div className="px-3 py-2.5 border-t border-line-subtle flex items-center justify-between">
+      <div className="px-3 py-2.5 flex items-center justify-between">
         <button
           type="button"
           onClick={() => setIsCollapsed(true)}

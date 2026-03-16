@@ -25,14 +25,14 @@ export function DocPreviewModal({
         animate={{ opacity: 1, y: 0, scale: 1 }}
         exit={{ opacity: 0, y: 20, scale: 0.98 }}
         transition={{ duration: 0.2 }}
-        className="flex w-full max-w-3xl max-h-[calc(100vh-4rem)] flex-col overflow-hidden rounded-xl bg-canvas-elevated border border-line shadow-lg"
+        className="flex w-full max-w-3xl max-h-[calc(100vh-4rem)] flex-col overflow-hidden rounded-xl bg-canvas-elevated shadow-lg"
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
         aria-label={doc.title}
       >
         {/* Header */}
-        <div className="flex items-center gap-4 border-b border-line-subtle px-6 py-4">
+        <div className="flex items-center gap-4 px-6 py-4">
           <div className="flex-1 truncate text-lg font-semibold text-content-primary font-display italic">
             {doc.title}
           </div>

@@ -8,48 +8,48 @@
 
 :root,
 [data-theme="light"] {
-  --bg-base: #F5F5F7;
-  --bg-surface: #EEEEF0;
+  --bg-base: #e7e7ff;
+  --bg-surface: #f6f6ff;
   --bg-elevated: #FFFFFF;
-  --bg-hover: #E8E8EC;
-  --bg-active: #DFDFE3;
+  --bg-hover: #deddff;
+  --bg-active: #d1cfff;
 
-  --border-subtle: #E5E5EA;
-  --border-default: #D1D1D6;
-  --border-strong: #B0B0B8;
+  --border-subtle: #deddff;
+  --border-default: #bfbcfc;
+  --border-strong: #a8a4f0;
 
   --text-primary: #1A1A1E;
-  --text-secondary: #6B6B78;
-  --text-tertiary: #9D9DAA;
+  --text-secondary: #5C5A72;
+  --text-tertiary: #908EA5;
   --text-inverse: #FFFFFF;
 
   --accent-primary: #5C6BC0;
-  --accent-glow: rgba(92, 107, 192, 0.12);
+  --accent-glow: rgba(92, 107, 192, 0.14);
   --accent-success: #22C55E;
   --accent-success-glow: rgba(34, 197, 94, 0.1);
   --accent-error: #EF4444;
   --accent-warning: #F59E0B;
 
-  --ai-bubble-bg: #F0F1FA;
-  --ai-bubble-border: #D8DBF0;
-  --user-bubble-bg: #E8EAFF;
-  --user-bubble-border: #C7CBF0;
+  --ai-bubble-bg: #f0f0ff;
+  --ai-bubble-border: #d1cfff;
+  --user-bubble-bg: #e7e7ff;
+  --user-bubble-border: #bfbcfc;
 
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06);
-  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.08);
-  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.1);
-  --shadow-accent: 0 0 20px rgba(92, 107, 192, 0.12);
+  --shadow-sm: 0 1px 3px rgba(100, 90, 180, 0.06);
+  --shadow-md: 0 4px 16px rgba(100, 90, 180, 0.08);
+  --shadow-lg: 0 8px 32px rgba(100, 90, 180, 0.1);
+  --shadow-accent: 0 0 20px rgba(92, 107, 192, 0.14);
   --shadow-success: 0 0 12px rgba(34, 197, 94, 0.1);
 
-  --page-shadow: 0 2px 24px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(0, 0, 0, 0.03);
+  --page-shadow: 0 2px 24px rgba(100, 90, 180, 0.1), 0 0 0 1px rgba(100, 90, 180, 0.04);
   --toolbar-bg: #FFFFFF;
-  --toolbar-border: #D1D1D6;
-  --toolbar-btn-hover: #F0F0F4;
+  --toolbar-border: #bfbcfc;
+  --toolbar-btn-hover: #f0f0ff;
   --toolbar-btn-active-bg: var(--accent-primary);
   --toolbar-btn-active-color: #FFFFFF;
-  --toolbar-btn-color: #6B6B78;
+  --toolbar-btn-color: #5C5A72;
   --toolbar-dropdown-bg: #FFFFFF;
-  --editor-gradient-start: #E8E8EC;
+  --editor-gradient-start: #deddff;
 }
 
 /* ═══════════════════════════════════════

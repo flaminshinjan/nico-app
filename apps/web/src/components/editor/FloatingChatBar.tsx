@@ -37,7 +37,7 @@ export function FloatingChatBar({ onOpen }: FloatingChatBarProps) {
   return (
     <form
       onSubmit={handleSubmit}
-      className="absolute bottom-6 left-1/2 z-40 flex w-[520px] -translate-x-1/2 items-center gap-3 rounded-xl border border-line bg-canvas-base px-4 py-3"
+      className="absolute bottom-6 left-1/2 z-40 flex w-[520px] -translate-x-1/2 items-center gap-3 rounded-xl bg-canvas-elevated px-4 py-3"
       style={{ boxShadow: "var(--shadow-lg), var(--shadow-accent)" }}
     >
       <textarea
