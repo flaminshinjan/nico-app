@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { DocCard } from "@/components/ai/DocCard";
 import { SkillSelector } from "@/components/ai/SkillSelector";
 import { useChat } from "@/context/ChatContext";
@@ -9,6 +9,7 @@ import { SourcesCard } from "@/components/ai/SourcesCard";
 import { StepsTracker } from "@/components/ai/StepsTracker";
 import type { AssistantMessage } from "@/context/ChatContext";
 import type { GeneratedDoc } from "@/hooks/useDocumentGenerate";
+import aiEmptyImg from "../../../assets/empty_states/ai_empty.png";
 
 function isAssistantMessageLoading(message: AssistantMessage) {
   return (
@@ -125,7 +126,7 @@ export function AISidePanel({ onClose }: AISidePanelProps) {
 
   return (
     <>
-      <div className="w-[340px] flex-shrink-0 flex flex-col bg-canvas-elevated rounded-xl overflow-hidden h-full shadow-sm">
+      <div className="w-[340px] flex-shrink-0 flex flex-col bg-canvas-elevated rounded-2xl overflow-hidden h-full shadow-sm">
         {/* Header */}
         <div className="flex items-center gap-3 px-4 h-[52px] shrink-0">
           <div className="pulse-dot" />
@@ -179,10 +180,29 @@ export function AISidePanel({ onClose }: AISidePanelProps) {
           className="flex-1 overflow-y-auto px-4 py-4 space-y-4"
         >
           {messages.length === 0 ? (
-            <div className="flex h-full items-center justify-center p-4">
-              <p className="text-sm text-content-tertiary text-center">
-                Start a conversation to generate documents
-              </p>
+            <div className="flex h-full flex-col items-center justify-center px-2 select-none">
+              <motion.img
+                src={aiEmptyImg}
+                alt="Write with AI"
+                className="w-90 h-90 object-contain opacity-95"
+                initial={{ scale: 0.85, opacity: 0 }}
+                animate={{ scale: 1, opacity: 0.85 }}
+                transition={{ duration: 0.5, ease: "easeOut" }}
+                draggable={false}
+              />
+              <motion.div
+                className="mt-4 text-center"
+                initial={{ y: 10, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ duration: 0.4, delay: 0.15 }}
+              >
+                <p className="text-[15px] font-semibold text-content-primary font-serif">
+                  Your words, amplified.
+                </p>
+                <p className="mt-1.5 text-[12px] text-content-tertiary leading-relaxed max-w-[220px] mx-auto">
+                  Pick a skill, ask a question, and let AI craft polished documents in seconds.
+                </p>
+              </motion.div>
             </div>
           ) : (
             messages.map((msg) => (
