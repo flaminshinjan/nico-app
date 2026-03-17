@@ -92,11 +92,11 @@ export function DocumentEditor() {
     }
     notifyContentChange();
   }, [notifyContentChange]);
-
   return (
     <div className="flex-1 min-h-0 flex flex-col">
       {/* Top toolbar */}
       <header className="flex items-center gap-2 px-5 h-12 shrink-0">
+
         <button
           type="button"
           onClick={handleImportDocx}
