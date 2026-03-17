@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import { useDocumentEditor } from "@/context/DocumentEditorContext";
 import { useTheme } from "@/context/ThemeContext";
 
@@ -23,11 +24,21 @@ export function DocumentOutlinePanel() {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const { headings } = useDocumentEditor();
   const { theme, toggleTheme } = useTheme();
-  const tabLabel = headings[0]?.title ?? "Untitled";
+
+  const handleHeadingClick = (id: string) => {
+    const editorElement = document.querySelector(".ck-editor__editable");
+    if (!editorElement) return;
+
+    const allHeadings = editorElement.querySelectorAll("h1, h2, h3");
+    const target = allHeadings[parseInt(id, 10)];
+    if (target) {
+      target.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  };
 
   if (isCollapsed) {
     return (
-      <div className="w-12 flex-shrink-0 h-full bg-canvas-elevated rounded-xl flex flex-col items-center py-4 gap-3 shadow-sm">
+      <div className="w-12 flex-shrink-0 h-full bg-canvas-elevated rounded-xl flex flex-col items-center py-4 gap-3 shadow-sm border border-canvas-border/50">
         <button
           type="button"
           onClick={() => setIsCollapsed(false)}
@@ -54,64 +65,67 @@ export function DocumentOutlinePanel() {
   }
 
   return (
-    <div className="w-60 flex-shrink-0 h-full bg-canvas-elevated rounded-xl flex flex-col overflow-hidden shadow-sm">
+    <div className="w-64 flex-shrink-0 h-full bg-canvas-elevated rounded-xl flex flex-col overflow-hidden shadow-sm border border-canvas-border/50">
       {/* Brand */}
-      <div className="px-4 h-12 flex items-center gap-2 shrink-0">
-        <svg className="w-4 h-4 text-accent flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
-          <path d="M13 3L4 14h7l-2 7 9-11h-7l2-7z" />
-        </svg>
-        <span className="text-[13px] font-semibold text-content-primary tracking-tight">
-          Cursor for Word
+      <div className="px-4 h-12 flex items-center gap-2 shrink-0 border-b border-canvas-border/30">
+        <div className="w-6 h-6 rounded-md bg-accent/10 flex items-center justify-center">
+          <svg className="w-3.5 h-3.5 text-accent" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M13 3L4 14h7l-2 7 9-11h-7l2-7z" />
+          </svg>
+        </div>
+        <span className="text-[13px] font-bold text-content-primary tracking-tight">
+          NICO DOCS
         </span>
       </div>
 
       {/* Section label */}
-      <div className="px-4 pt-3 pb-2">
-        <span className="text-[10px] font-medium tracking-[0.1em] uppercase text-content-tertiary select-none">
-          Documents
+      <div className="px-5 pt-5 pb-2">
+        <span className="text-[10px] font-bold tracking-[0.12em] uppercase text-content-tertiary/60 select-none">
+          Document Outline
         </span>
       </div>
 
-      {/* New page */}
-      <div className="px-3 pb-2">
-        <button
-          type="button"
-          className="w-full px-3 py-1.5 text-sm text-content-tertiary rounded-md hover:text-content-primary hover:bg-canvas-hover transition-all"
-        >
-          + New page
-        </button>
+      {/* Outline Tree */}
+      <div className="flex-1 px-3 py-1 overflow-y-auto space-y-0.5 custom-scrollbar">
+        {headings.length === 0 ? (
+          <div className="px-4 py-3 text-[13px] text-content-tertiary italic opacity-60">
+            No headings found
+          </div>
+        ) : (
+          <AnimatePresence mode="popLayout">
+            {headings.map((item, index) => (
+              <motion.button
+                key={`${item.id}-${index}`}
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: index * 0.03 }}
+                onClick={() => handleHeadingClick(item.id)}
+                className={`
+                  w-full flex items-center gap-2 px-3 py-1.5 text-left rounded-md transition-all group
+                  hover:bg-canvas-hover
+                  ${item.level === 0 ? "font-bold text-content-primary" : "text-content-secondary"}
+                `}
+                style={{ paddingLeft: `${12 + (item.level * 16)}px` }}
+              >
+                <div className={`
+                  w-1 h-1 rounded-full bg-content-tertiary/30 group-hover:bg-accent
+                  ${item.level === 0 ? "w-1.5 h-1.5 bg-accent/40" : ""}
+                `} />
+                <span className="text-[13px] truncate">
+                  {item.title}
+                </span>
+              </motion.button>
+            ))}
+          </AnimatePresence>
+        )}
       </div>
 
-      {/* Document tabs */}
-      <div className="flex-1 px-2 py-1 overflow-y-auto">
-        <div className="flex items-center gap-2 px-2.5 py-2 bg-canvas-active rounded-md group">
-          <svg className="w-3.5 h-4 text-accent flex-shrink-0 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
-            <path d="M6 3h8l4 4v14H6V3z" />
-            <path d="M14 3v4h4" />
-          </svg>
-          <span className="text-sm text-content-primary truncate flex-1" title={tabLabel}>
-            {tabLabel}
-          </span>
-          <button
-            type="button"
-            className="p-0.5 text-content-tertiary hover:text-content-primary rounded opacity-0 group-hover:opacity-100 transition-opacity"
-            aria-label="Tab options"
-          >
-            <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
-              <circle cx="12" cy="6" r="1.5" />
-              <circle cx="12" cy="12" r="1.5" />
-              <circle cx="12" cy="18" r="1.5" />
-            </svg>
-          </button>
-        </div>
-      </div>
-
-      {/* Bottom actions */}
-      <div className="px-3 py-2.5 flex items-center justify-between">
+      {/* Bottom Actions */}
+      <div className="mt-auto px-3 py-3 border-t border-canvas-border/30 flex items-center justify-between bg-canvas-base/30">
         <button
           type="button"
           onClick={() => setIsCollapsed(true)}
-          className="p-1.5 text-content-tertiary hover:text-content-primary hover:bg-canvas-hover rounded-md transition-colors"
+          className="p-2 text-content-tertiary hover:text-content-primary hover:bg-canvas-hover rounded-md transition-colors"
           aria-label="Collapse sidebar"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -121,10 +135,10 @@ export function DocumentOutlinePanel() {
         <button
           type="button"
           onClick={toggleTheme}
-          className="p-1.5 text-content-tertiary hover:text-content-primary hover:bg-canvas-hover rounded-md transition-colors"
+          className="p-2 text-content-tertiary hover:text-content-primary hover:bg-canvas-hover rounded-md transition-colors border border-canvas-border/50"
           aria-label="Toggle theme"
         >
-          {theme === "dark" ? <SunIcon className="w-4 h-4" /> : <MoonIcon className="w-4 h-4" />}
+          {theme === "dark" ? <SunIcon className="w-4 h-4 text-amber-400" /> : <MoonIcon className="w-4 h-4 text-indigo-500" />}
         </button>
       </div>
     </div>
