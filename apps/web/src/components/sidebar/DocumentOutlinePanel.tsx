@@ -22,7 +22,7 @@ function MoonIcon({ className }: { className?: string }) {
 
 export function DocumentOutlinePanel() {
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const { headings } = useDocumentEditor();
+  const { headings, title, setTitle } = useDocumentEditor();
   const { theme, toggleTheme } = useTheme();
 
   const handleHeadingClick = (id: string) => {
@@ -78,11 +78,22 @@ export function DocumentOutlinePanel() {
         </span>
       </div>
 
-      {/* Section label */}
-      <div className="px-5 pt-5 pb-2">
-        <span className="text-[10px] font-bold tracking-[0.12em] uppercase text-content-tertiary/60 select-none">
-          Document Outline
-        </span>
+      <div className="px-5 py-4 group">
+        <div className="flex flex-col gap-1">
+          <label className="text-[10px] font-bold tracking-[0.12em] uppercase text-content-tertiary/60 select-none px-0.5">
+            Document Title
+          </label>
+          <input
+            type="text"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            onBlur={(e) => {
+              if (!e.target.value.trim()) setTitle("Untitled Document");
+            }}
+            placeholder="Untitled Document"
+            className="w-full bg-transparent border-none outline-none text-[14px] font-semibold text-content-primary placeholder:text-content-tertiary/40 px-0.5 py-1 rounded hover:bg-canvas-hover focus:bg-canvas-hover transition-all"
+          />
+        </div>
       </div>
 
       {/* Outline Tree */}

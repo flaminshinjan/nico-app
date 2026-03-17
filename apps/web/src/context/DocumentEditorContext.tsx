@@ -38,6 +38,8 @@ type DocumentEditorContextValue = {
   embedGeneratedContent: (doc: GeneratedDoc) => Promise<void>;
   isEmbedding: boolean;
   headings: OutlineItem[];
+  title: string;
+  setTitle: (title: string) => void;
   notifyContentChange: () => void;
 };
 
@@ -49,6 +51,7 @@ export function DocumentEditorProvider({ children }: { children: ReactNode }) {
   const editorApiRef = useRef<EditorApi | null>(null);
   const [isEmbedding, setIsEmbedding] = useState(false);
   const [headings, setHeadings] = useState<OutlineItem[]>([]);
+  const [title, setTitle] = useState("Untitled Document");
   const pendingHtmlRef = useRef<string | null>(null);
 
   const notifyContentChange = useCallback(() => {
@@ -100,9 +103,11 @@ export function DocumentEditorProvider({ children }: { children: ReactNode }) {
       embedGeneratedContent,
       isEmbedding,
       headings,
+      title,
+      setTitle,
       notifyContentChange,
     }),
-    [registerEditor, embedGeneratedContent, isEmbedding, headings, notifyContentChange]
+    [registerEditor, embedGeneratedContent, isEmbedding, headings, title, notifyContentChange]
   );
 
   return (
