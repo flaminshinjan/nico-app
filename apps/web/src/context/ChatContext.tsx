@@ -13,6 +13,8 @@ import {
 // import { searchWebQueries } from "@/hooks/useSerpSearch";
 import type { GeneratedDoc } from "@/hooks/useDocumentGenerate";
 import type { SerpResult } from "@/hooks/useSerpSearch";
+import { skills } from "@/data/skills";
+import type { CustomSkill } from "@/hooks/useCustomSkills";
 
 type StepStatus = "pending" | "active" | "done";
 
@@ -42,14 +44,46 @@ type Message = UserMessage | AssistantMessage;
 type ChatContextValue = {
   messages: Message[];
   isLoading: boolean;
+  selectedSkillId: string | null;
+  setSelectedSkillId: (id: string | null) => void;
   sendMessage: (content: string) => Promise<void>;
 };
 
 const ChatContext = createContext<ChatContextValue | undefined>(undefined);
 
-function getInitialSteps(): Step[] {
+function getCustomSkills(): CustomSkill[] {
+  try {
+    const raw = localStorage.getItem("custom-skills");
+    return raw ? (JSON.parse(raw) as CustomSkill[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+function findSkillName(skillId: string | null): string | null {
+  if (!skillId) return null;
+  const builtin = skills.find((s) => s.id === skillId);
+  if (builtin) return builtin.name;
+  const custom = getCustomSkills().find((s) => s.id === skillId);
+  return custom?.name ?? null;
+}
+
+function findCustomSkillPrompt(skillId: string | null): string | null {
+  if (!skillId) return null;
+  const custom = getCustomSkills().find((s) => s.id === skillId);
+  return custom?.systemPrompt ?? null;
+}
+
+function getInitialSteps(skillId: string | null): Step[] {
+  const skillName = findSkillName(skillId);
   return [
-    { id: "1", label: "Evaluating prompt", status: "active" },
+    {
+      id: "1",
+      label: skillName
+        ? `Using ${skillName} skill`
+        : "Classifying skill",
+      status: "active",
+    },
     { id: "2", label: "Searching the web", status: "pending" },
     { id: "3", label: "Generating document", status: "pending" },
   ];
@@ -153,6 +187,7 @@ function isDocumentResultChunk(chunk: WorkflowStreamChunk): chunk is {
 export function ChatProvider({ children }: { children: ReactNode }) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedSkillId, setSelectedSkillId] = useState<string | null>(null);
 
   const updateAssistantMessage = useCallback(
     (id: string, patch: Partial<AssistantMessage>) => {
@@ -193,7 +228,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       id: assistantMessageId,
       role: "assistant",
       content: "",
-      steps: getInitialSteps(),
+      steps: getInitialSteps(selectedSkillId),
       sources: [],
     };
 
@@ -208,7 +243,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       await wait(600);
 
       updateAssistantMessage(assistantMessageId, {
-        steps: markSearchStepActive(getInitialSteps()),
+        steps: markSearchStepActive(getInitialSteps(selectedSkillId)),
       });
 
       const runResponse = await fetch("/api/mastra/workflows/documentWorkflow/create-run", {
@@ -240,6 +275,8 @@ export function ChatProvider({ children }: { children: ReactNode }) {
           body: JSON.stringify({
             inputData: {
               query: trimmedContent,
+              ...(selectedSkillId ? { skillId: selectedSkillId } : {}),
+              ...(selectedSkillId ? { customPrompt: findCustomSkillPrompt(selectedSkillId) } : {}),
             },
           }),
         }
@@ -248,7 +285,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       await wait(400);
 
       updateAssistantMessage(assistantMessageId, {
-        steps: markGenerateStepActive(markSearchStepActive(getInitialSteps())),
+        steps: markGenerateStepActive(markSearchStepActive(getInitialSteps(selectedSkillId))),
       });
 
       const response = await workflowRequest;
@@ -316,7 +353,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       updateAssistantMessage(assistantMessageId, {
         sources: finalResult.sources,
         doc: generatedDoc,
-        steps: markAllStepsDone(markGenerateStepActive(markSearchStepActive(getInitialSteps()))),
+        steps: markAllStepsDone(markGenerateStepActive(markSearchStepActive(getInitialSteps(selectedSkillId)))),
       });
     } catch (error: unknown) {
       console.error("Document generation failed.", error);
@@ -334,15 +371,17 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     } finally {
       setIsLoading(false);
     }
-  }, [appendAssistantToken, updateAssistantMessage]);
+  }, [appendAssistantToken, updateAssistantMessage, selectedSkillId]);
 
   const value = useMemo<ChatContextValue>(
     () => ({
       messages,
       isLoading,
+      selectedSkillId,
+      setSelectedSkillId,
       sendMessage,
     }),
-    [isLoading, messages, sendMessage]
+    [isLoading, messages, selectedSkillId, sendMessage]
   );
 
   return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>;

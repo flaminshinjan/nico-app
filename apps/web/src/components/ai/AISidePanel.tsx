@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { AnimatePresence } from "framer-motion";
 import { DocCard } from "@/components/ai/DocCard";
+import { SkillSelector } from "@/components/ai/SkillSelector";
 import { useChat } from "@/context/ChatContext";
 import { useDocumentEditor } from "@/context/DocumentEditorContext";
 import { DocPreviewModal } from "@/components/ai/DocPreviewModal";
@@ -69,7 +70,7 @@ type AISidePanelProps = {
 };
 
 export function AISidePanel({ onClose }: AISidePanelProps) {
-  const { messages, sendMessage, isLoading } = useChat();
+  const { messages, sendMessage, isLoading, selectedSkillId, setSelectedSkillId } = useChat();
   const { embedGeneratedContent } = useDocumentEditor();
   const [inputValue, setInputValue] = useState("");
   const [previewDoc, setPreviewDoc] = useState<GeneratedDoc | null>(null);
@@ -248,37 +249,45 @@ export function AISidePanel({ onClose }: AISidePanelProps) {
           onSubmit={handleSubmit}
           className="px-3 py-2.5 shrink-0"
         >
-          <div className="flex items-center gap-2 rounded-lg border border-line bg-transparent px-3 py-2 focus-within:border-accent transition-all">
-            <textarea
-              ref={textareaRef}
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder="Ask Cursor for Word..."
-              rows={1}
-              className="flex-1 bg-transparent text-[13px] leading-[20px] text-content-primary outline-none placeholder:text-content-tertiary resize-none font-sans"
-              style={{ minHeight: 20, maxHeight: 160 }}
-            />
-            <button
-              type="submit"
-              disabled={isLoading || inputValue.trim().length === 0}
-              className="w-7 h-7 flex-shrink-0 flex items-center justify-center rounded-full bg-accent text-content-inverse transition hover:brightness-110 disabled:opacity-30 disabled:cursor-not-allowed"
-              aria-label="Send"
-            >
-              <svg
-                className="w-[15px] h-[15px]"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+          <div className="rounded-lg border border-line bg-transparent focus-within:border-accent transition-all">
+            <div className="flex items-center gap-2 px-3 py-2">
+              <textarea
+                ref={textareaRef}
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder="Ask Cursor for Word..."
+                rows={1}
+                className="flex-1 bg-transparent text-[13px] leading-[20px] text-content-primary outline-none placeholder:text-content-tertiary resize-none font-sans"
+                style={{ minHeight: 20, maxHeight: 160 }}
+              />
+              <button
+                type="submit"
+                disabled={isLoading || inputValue.trim().length === 0}
+                className="w-7 h-7 flex-shrink-0 flex items-center justify-center rounded-full bg-accent text-content-inverse transition hover:brightness-110 disabled:opacity-30 disabled:cursor-not-allowed"
+                aria-label="Send"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2.5}
-                  d="M5 10l7-7m0 0l7 7m-7-7v18"
-                />
-              </svg>
-            </button>
+                <svg
+                  className="w-[15px] h-[15px]"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2.5}
+                    d="M5 10l7-7m0 0l7 7m-7-7v18"
+                  />
+                </svg>
+              </button>
+            </div>
+            <div className="flex items-center px-2 pb-1.5">
+              <SkillSelector
+                selectedSkillId={selectedSkillId}
+                onSelect={setSelectedSkillId}
+              />
+            </div>
           </div>
         </form>
       </div>

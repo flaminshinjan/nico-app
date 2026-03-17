@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { DocumentOutlinePanel } from "@/components/sidebar/DocumentOutlinePanel";
 import { DocumentEditorPanel } from "@/components/editor/DocumentEditorPanel";
@@ -12,6 +12,21 @@ import { ThemeProvider } from "@/context/ThemeContext";
 function LayoutInner() {
   const [isSidePanelOpen, setIsSidePanelOpen] = useState(false);
   const { isLoading } = useChat();
+
+  const togglePanel = useCallback(() => {
+    setIsSidePanelOpen((prev) => !prev);
+  }, []);
+
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if ((e.metaKey || e.ctrlKey) && e.key === "d") {
+        e.preventDefault();
+        togglePanel();
+      }
+    }
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [togglePanel]);
 
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-canvas-base p-2 gap-2">

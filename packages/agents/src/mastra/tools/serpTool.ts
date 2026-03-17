@@ -28,28 +28,27 @@ export const serpTool = createTool({
     const data = (await response.json()) as Record<string, unknown>;
     const organic = Array.isArray(data.organic_results) ? data.organic_results : [];
 
-    const results = organic
-      .map((result: unknown) => {
-        if (typeof result !== "object" || result === null) return null;
-        const raw = result as Record<string, unknown>;
-        const url = typeof raw.link === "string" ? raw.link : null;
-        if (!url) return null;
-        return {
-          title: typeof raw.title === "string" ? raw.title : url,
-          url,
-          snippet:
-            typeof raw.snippet === "string"
-              ? raw.snippet
-              : typeof raw.displayed_link === "string"
-                ? raw.displayed_link
-                : "",
-          favicon: typeof raw.favicon === "string" ? raw.favicon : undefined,
-          displayed_link:
-            typeof raw.displayed_link === "string" ? raw.displayed_link : undefined,
-        };
-      })
-      .filter((r): r is z.infer<typeof serpResultSchema> => r !== null)
-      .slice(0, 4);
+    const results: z.infer<typeof serpResultSchema>[] = [];
+    for (const item of organic) {
+      if (typeof item !== "object" || item === null) continue;
+      const raw = item as Record<string, unknown>;
+      const url = typeof raw.link === "string" ? raw.link : null;
+      if (!url) continue;
+      results.push({
+        title: typeof raw.title === "string" ? raw.title : url,
+        url,
+        snippet:
+          typeof raw.snippet === "string"
+            ? raw.snippet
+            : typeof raw.displayed_link === "string"
+              ? raw.displayed_link
+              : "",
+        favicon: typeof raw.favicon === "string" ? raw.favicon : undefined,
+        displayed_link:
+          typeof raw.displayed_link === "string" ? raw.displayed_link : undefined,
+      });
+      if (results.length >= 4) break;
+    }
 
     return { results };
   },
