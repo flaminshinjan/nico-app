@@ -87,7 +87,7 @@ export function AISidePanel({ onClose }: AISidePanelProps) {
       | undefined;
     if (last?.doc && lastEmbeddedRef.current !== last.id) {
       lastEmbeddedRef.current = last.id;
-      void embedGeneratedContent(last.doc);
+      void embedGeneratedContent(last.doc, last.sources);
     }
   }, [messages, embedGeneratedContent]);
 

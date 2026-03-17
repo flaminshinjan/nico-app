@@ -2,32 +2,66 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { CKEditor } from "@ckeditor/ckeditor5-react";
 import ClassicEditor from "@ckeditor/ckeditor5-build-classic";
 import mammoth from "mammoth";
-import { getApiUrl } from "@/lib/api";
 import {
   useDocumentEditor,
   parseHeadingsFromHtml,
 } from "@/context/DocumentEditorContext";
+import { ExportMenu } from "@/components/editor/ExportMenu";
+import { InlineAIToolbar } from "@/components/editor/InlineAIToolbar";
+import { GhostText } from "@/components/editor/GhostText";
 
-type EditorInstance = {
-  setData: (data: string) => void;
-  getData: () => string;
-};
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type RawEditor = any;
 
 export function DocumentEditor() {
   const { registerEditor, notifyContentChange, title } = useDocumentEditor();
-  const editorRef = useRef<EditorInstance | null>(null);
+  const editorRef = useRef<RawEditor>(null);
   const unregisterRef = useRef<(() => void) | null>(null);
   const [data, setData] = useState(
     "<p>Start typing or import a .docx file.</p>"
   );
+  const [editorEl, setEditorEl] = useState<HTMLElement | null>(null);
 
   const handleEditorReady = useCallback(
-    (editor: EditorInstance) => {
+    (editor: RawEditor) => {
       editorRef.current = editor;
+
+      const editableEl = editor.ui?.view?.editable?.element ?? null;
+      setEditorEl(editableEl);
+
       unregisterRef.current = registerEditor({
-        setData: (html: string) => editor.setData(html || "<p></p>"),
+        setData: (html: string) => {
+          editor.setData(html || "<p></p>");
+          setData(html || "<p></p>");
+        },
         getData: () => editor.getData(),
         getHeadings: () => parseHeadingsFromHtml(editor.getData()),
+        getSelectedText: () => {
+          const sel = window.getSelection();
+          if (!sel || !editableEl?.contains(sel.anchorNode)) return "";
+          return sel.toString();
+        },
+        replaceSelection: (text: string) => {
+          try {
+            editor.model.change((writer: RawEditor) => {
+              const selection = editor.model.document.selection;
+              editor.model.deleteContent(selection);
+              writer.insertText(text, selection.getFirstPosition());
+            });
+          } catch {
+            console.error("Failed to replace selection");
+          }
+        },
+        insertAtCursor: (text: string) => {
+          try {
+            editor.model.change((writer: RawEditor) => {
+              writer.insertText(text, editor.model.document.selection.getFirstPosition());
+            });
+          } catch {
+            console.error("Failed to insert at cursor");
+          }
+        },
+        getEditorElement: () => editableEl,
       });
     },
     [registerEditor]
@@ -54,38 +88,13 @@ export function DocumentEditor() {
         const html = result.value;
         if (editorRef.current) editorRef.current.setData(html || "<p></p>");
         else setData(html || "<p></p>");
+        notifyContentChange();
       } catch (err) {
         console.error("Failed to import .docx:", err);
       }
     };
     input.click();
-  }, []);
-
-  const handleDownloadDocx = useCallback(async () => {
-    const html = editorRef.current?.getData() ?? data;
-    try {
-      const res = await fetch(`${getApiUrl()}/api/documents/html-to-docx`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ html }),
-      });
-      if (!res.ok) throw new Error("Export failed");
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      
-      // Sanitize and format filename
-      const safeTitle = title.trim() || "Untitled Document";
-      const fileName = safeTitle.replace(/[\\/:*?"<>|]/g, "").trim() || "Untitled Document";
-      
-      a.download = `${fileName}.docx`;
-      a.click();
-      URL.revokeObjectURL(url);
-    } catch (err) {
-      console.error("Failed to export .docx:", err);
-    }
-  }, [data, title]);
+  }, [notifyContentChange]);
 
   const handleAddPageBreak = useCallback(() => {
     const pageBreakHtml = '<hr class="page-break" />';
@@ -97,11 +106,48 @@ export function DocumentEditor() {
     }
     notifyContentChange();
   }, [notifyContentChange]);
+
+  const getHtml = useCallback(() => {
+    return editorRef.current?.getData() ?? data;
+  }, [data]);
+
+  const handleInlineReplace = useCallback((text: string) => {
+    const editor = editorRef.current;
+    if (!editor) return;
+    try {
+      editor.model.change((writer: RawEditor) => {
+        const selection = editor.model.document.selection;
+        editor.model.deleteContent(selection);
+        writer.insertText(text, selection.getFirstPosition());
+      });
+      notifyContentChange();
+    } catch {
+      console.error("Failed to replace selection via inline AI");
+    }
+  }, [notifyContentChange]);
+
+  const getContextText = useCallback(() => {
+    const html = editorRef.current?.getData() ?? "";
+    const doc = new DOMParser().parseFromString(html, "text/html");
+    return doc.body.textContent ?? "";
+  }, []);
+
+  const handleAcceptSuggestion = useCallback((text: string) => {
+    const editor = editorRef.current;
+    if (!editor) return;
+    try {
+      editor.model.change((writer: RawEditor) => {
+        writer.insertText(text, editor.model.document.selection.getFirstPosition());
+      });
+      notifyContentChange();
+    } catch {
+      console.error("Failed to accept suggestion");
+    }
+  }, [notifyContentChange]);
+
   return (
     <div className="flex-1 min-h-0 flex flex-col">
-      {/* Top toolbar */}
       <header className="flex items-center gap-2 px-5 h-12 shrink-0">
-
         <button
           type="button"
           onClick={handleImportDocx}
@@ -109,37 +155,20 @@ export function DocumentEditor() {
         >
           Import .docx
         </button>
-        <button
-          type="button"
-          onClick={handleDownloadDocx}
-          className="h-8 px-3.5 text-sm font-medium text-content-inverse bg-accent rounded-md hover:brightness-110 transition-all"
-        >
-          Download as .docx
-        </button>
+        <ExportMenu getHtml={getHtml} title={title} />
         <div className="flex-1" />
         <button
           type="button"
           onClick={handleAddPageBreak}
           className="w-8 h-8 flex items-center justify-center text-content-tertiary rounded-md hover:bg-canvas-hover hover:text-content-primary transition-all"
-          aria-label="Add page"
+          aria-label="Add page break"
         >
-          <svg
-            className="w-4 h-4"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M12 4v16m8-8H4"
-            />
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
           </svg>
         </button>
       </header>
 
-      {/* Document scroll area */}
       <div
         className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden flex justify-center py-10 px-4"
         style={{
@@ -163,6 +192,13 @@ export function DocumentEditor() {
           />
         </div>
       </div>
+
+      <InlineAIToolbar editorElement={editorEl} onReplace={handleInlineReplace} />
+      <GhostText
+        editorElement={editorEl}
+        getContextText={getContextText}
+        onAccept={handleAcceptSuggestion}
+      />
     </div>
   );
 }
