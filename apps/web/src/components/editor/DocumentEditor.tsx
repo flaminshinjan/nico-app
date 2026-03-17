@@ -14,7 +14,7 @@ type EditorInstance = {
 };
 
 export function DocumentEditor() {
-  const { registerEditor, notifyContentChange } = useDocumentEditor();
+  const { registerEditor, notifyContentChange, title } = useDocumentEditor();
   const editorRef = useRef<EditorInstance | null>(null);
   const unregisterRef = useRef<(() => void) | null>(null);
   const [data, setData] = useState(
@@ -74,13 +74,18 @@ export function DocumentEditor() {
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = "document.docx";
+      
+      // Sanitize and format filename
+      const safeTitle = title.trim() || "Untitled Document";
+      const fileName = safeTitle.replace(/[\\/:*?"<>|]/g, "").trim() || "Untitled Document";
+      
+      a.download = `${fileName}.docx`;
       a.click();
       URL.revokeObjectURL(url);
     } catch (err) {
       console.error("Failed to export .docx:", err);
     }
-  }, [data]);
+  }, [data, title]);
 
   const handleAddPageBreak = useCallback(() => {
     const pageBreakHtml = '<hr class="page-break" />';
