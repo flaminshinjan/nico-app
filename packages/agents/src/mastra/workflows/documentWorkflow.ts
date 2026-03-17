@@ -7,6 +7,10 @@ import { documentResultSchema, serpResultSchema } from "../schemas";
 import { getSkillById, skills } from "../skills";
 import { readTextStream, stripJsonFences } from "../lib/stream";
 
+const workflowStageSchema = z.object({
+  stage: z.enum(["evaluating", "searching", "generating"]),
+});
+
 const BASE_INSTRUCTIONS = `You are a document drafting assistant.
 When given a user request and web sources:
 1. Use the sources as context to draft a comprehensive document
@@ -89,7 +93,12 @@ const searchStep = createStep({
     customPrompt: z.string().nullable(),
     results: z.array(serpResultSchema),
   }),
-  execute: async ({ inputData }) => {
+  execute: async ({ inputData, writer }) => {
+    await writer.custom({
+      type: "data-workflow-stage",
+      data: workflowStageSchema.parse({ stage: "searching" }),
+    });
+
     const executeSerpTool = serpTool.execute;
     if (!executeSerpTool) throw new Error("serpTool.execute is not defined.");
 
@@ -133,9 +142,13 @@ const generateStep = createStep({
     title: z.string(),
     markdown: z.string(),
     sources: z.array(serpResultSchema),
-    skillId: z.string(),
   }),
   execute: async ({ inputData, writer }) => {
+    await writer.custom({
+      type: "data-workflow-stage",
+      data: workflowStageSchema.parse({ stage: "generating" }),
+    });
+
     let skillBlock = "";
 
     if (inputData.customPrompt) {
@@ -188,7 +201,6 @@ const generateStep = createStep({
       title: parsed.title,
       markdown: parsed.markdown,
       sources: inputData.results,
-      skillId: inputData.skillId,
     };
 
     await writer.custom({
@@ -211,7 +223,6 @@ export const documentWorkflow = createWorkflow({
     title: z.string(),
     markdown: z.string(),
     sources: z.array(serpResultSchema),
-    skillId: z.string(),
   }),
 })
   .then(classifyStep)

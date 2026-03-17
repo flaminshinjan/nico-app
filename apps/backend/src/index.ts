@@ -1,56 +1,23 @@
-import path from "node:path";
-import { fileURLToPath } from "node:url";
-import dotenv from "dotenv";
+import { createApp } from "./app.js";
+import { loadEnv } from "./config/env.js";
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const backendDir = path.resolve(__dirname, "..");
-dotenv.config({ path: path.join(backendDir, ".env") });
-dotenv.config({ path: path.join(process.cwd(), ".env") });
+const config = loadEnv();
+const app = createApp(config);
 
-/* DEBUG HERE */
-console.log("ENV DEBUG:");
-console.log("cwd:", process.cwd());
-console.log("backendDir:", backendDir);
-console.log("GROQ_API_KEY:", process.env.GROQ_API_KEY);
-console.log("SERP_API_KEY:", process.env.SERP_API_KEY);
-console.log("--------------------------------");
-
-
-function envSet(name: string, altName?: string): boolean {
-  const v = process.env[name] ?? (altName ? process.env[altName] : undefined);
-  return typeof v === "string" && v.trim().length > 0 && !v.includes("your_");
+for (const warning of config.warnings) {
+  console.warn(`[config] ${warning}`);
 }
 
-import express from "express";
-import cors from "cors";
-import { documentsRouter } from "./routes/documents.js";
-import { serpRouter } from "./routes/serp.js";
-import { groqRouter } from "./routes/groq.js";
+const server = app.listen(config.port, () => {
+  console.log(`Backend listening on http://localhost:${config.port}`);
+});
 
-const app = express();
-const port = Number(process.env.PORT) || 4000;
-
-app.use(cors({ origin: true }));
-app.use(express.json({ limit: "10mb" }));
-
-app.use("/api/documents", documentsRouter);
-app.use("/api/serp", serpRouter);
-app.use("/api/groq", groqRouter);
-
-app.get("/health", (_req, res) => {
-  res.json({
-    status: "ok",
-    env: {
-      GROQ_API_KEY: envSet("GROQ_API_KEY", "VITE_GROQ_API_KEY") ? "set" : "missing",
-      SERP_API_KEY: envSet("SERP_API_KEY", "VITE_SERP_API_KEY") ? "set" : "missing",
-    },
+function shutdown(signal: NodeJS.Signals): void {
+  console.log(`Received ${signal}. Shutting down backend.`);
+  server.close(() => {
+    process.exit(0);
   });
-});
+}
 
-app.listen(port, () => {
-  const groq = envSet("GROQ_API_KEY", "VITE_GROQ_API_KEY");
-  const serp = envSet("SERP_API_KEY", "VITE_SERP_API_KEY");
-  console.log(`Backend listening on http://localhost:${port}`);
-  if (!groq) console.warn("  [warn] GROQ_API_KEY is missing or placeholder – Groq requests will return 500");
-  if (!serp) console.warn("  [warn] SERP_API_KEY is missing or placeholder – Serp requests will return 500");
-});
+process.on("SIGINT", shutdown);
+process.on("SIGTERM", shutdown);

@@ -1,33 +1,11 @@
+import { createGroqChatCompletion, parseJsonResponseText } from "@/utils/groq";
+
 type PlannedSearch = {
   queries: string[];
 };
 
-type GroqMessage = {
-  content?: unknown;
-};
-
-type GroqChoice = {
-  message?: unknown;
-};
-
-type GroqResponse = {
-  choices?: unknown;
-};
-
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
-}
-
-function isGroqResponse(value: unknown): value is GroqResponse {
-  return isRecord(value);
-}
-
-function isGroqChoice(value: unknown): value is GroqChoice {
-  return isRecord(value);
-}
-
-function isGroqMessage(value: unknown): value is GroqMessage {
-  return isRecord(value);
 }
 
 function isPlannedSearch(value: unknown): value is PlannedSearch {
@@ -38,23 +16,8 @@ function isPlannedSearch(value: unknown): value is PlannedSearch {
   );
 }
 
-function stripMarkdownFences(value: string) {
-  return value.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "").trim();
-}
-
-function extractJsonObject(value: string) {
-  const startIndex = value.indexOf("{");
-  const endIndex = value.lastIndexOf("}");
-
-  if (startIndex === -1 || endIndex === -1 || endIndex < startIndex) {
-    return value;
-  }
-
-  return value.slice(startIndex, endIndex + 1);
-}
-
 function parsePlannerResponse(value: string): PlannedSearch {
-  const parsed: unknown = JSON.parse(extractJsonObject(stripMarkdownFences(value)));
+  const parsed: unknown = parseJsonResponseText(value);
   if (!isPlannedSearch(parsed)) {
     throw new Error("Search planner output did not match PlannedSearch.");
   }
@@ -64,11 +27,22 @@ function parsePlannerResponse(value: string): PlannedSearch {
     .filter((query) => query.length > 0)
     .slice(0, 3);
 
-  if (queries.length === 0) {
-    throw new Error("Search planner returned no usable queries.");
-  }
-
   return { queries };
+}
+
+function shouldSkipWebSearch(prompt: string): boolean {
+  const normalized = prompt.toLowerCase();
+
+  return [
+    "email",
+    "message",
+    "text",
+    "dm",
+    "letter",
+    "note",
+    "invitation",
+    "invite",
+  ].some((keyword) => normalized.includes(keyword));
 }
 
 function buildFallbackQuery(prompt: string) {
@@ -105,54 +79,25 @@ function buildFallbackQuery(prompt: string) {
 }
 
 export async function planSearchQueries(prompt: string): Promise<PlannedSearch> {
-  const fallback = { queries: [buildFallbackQuery(prompt)] };
-  const { getApiUrl } = await import("@/lib/api");
+  const fallback = shouldSkipWebSearch(prompt)
+    ? { queries: [] }
+    : { queries: [buildFallbackQuery(prompt)] };
   try {
-    const response = await fetch(
-      `${getApiUrl()}/api/groq/openai/v1/chat/completions`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
+    const text = await createGroqChatCompletion({
+      model: "llama-3.3-70b-versatile",
+      max_tokens: 256,
+      messages: [
+        {
+          role: "system",
+          content:
+            'You turn drafting requests into web research queries only when research is actually needed. Return valid JSON only with shape { "queries": string[] }. If the request is a personal message, simple email, casual invite, or other writing task that does not need outside facts, return a single empty array. If research is needed, generate 1 to 3 short queries focused on factual retrieval terms and omit words like write, draft, create, or generate.',
         },
-      body: JSON.stringify({
-        model: "llama-3.3-70b-versatile",
-        max_tokens: 256,
-        messages: [
-          {
-            role: "system",
-            content:
-              'You rewrite drafting requests into concise web search queries. Return valid JSON only with shape { "queries": string[] }. Generate 1 to 3 short web queries. Focus on retrieval intent, role, company, location, compensation, and document type. Avoid imperative words like create, write, draft, or generate.',
-          },
-          {
-            role: "user",
-            content: prompt,
-          },
-        ],
-      }),
-      }
-    );
-
-    if (!response.ok) {
-      throw new Error(
-        `Search planner request failed with ${response.status} ${response.statusText}`
-      );
-    }
-
-    const data: unknown = await response.json();
-    if (!isGroqResponse(data) || !Array.isArray(data.choices)) {
-      throw new Error("Search planner response shape was invalid.");
-    }
-
-    const firstChoice = data.choices[0];
-    if (!isGroqChoice(firstChoice) || !isGroqMessage(firstChoice.message)) {
-      throw new Error("Search planner choice was invalid.");
-    }
-
-    const text = firstChoice.message.content;
-    if (typeof text !== "string") {
-      throw new Error("Search planner content was invalid.");
-    }
+        {
+          role: "user",
+          content: prompt,
+        },
+      ],
+    });
 
     const plannedSearch = parsePlannerResponse(text);
     if (import.meta.env.DEV) {

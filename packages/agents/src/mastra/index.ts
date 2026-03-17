@@ -6,4 +6,3 @@ export const mastra = new Mastra({
   agents: { documentAgent },
   workflows: { documentWorkflow },
 });
-

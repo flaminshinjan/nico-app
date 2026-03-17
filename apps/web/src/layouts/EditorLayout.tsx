@@ -49,7 +49,10 @@ function LayoutInner() {
       >
         <DocumentEditorPanel />
         {!isSidePanelOpen && (
-          <FloatingChatBar onOpen={() => setIsSidePanelOpen(true)} />
+          <FloatingChatBar
+            isOpen={isSidePanelOpen}
+            onOpen={() => setIsSidePanelOpen(true)}
+          />
         )}
       </motion.div>
 
@@ -62,7 +65,10 @@ function LayoutInner() {
             exit={{ x: 340, opacity: 0 }}
             transition={{ duration: 0.25, ease: "easeOut" }}
           >
-            <AISidePanel onClose={() => setIsSidePanelOpen(false)} />
+            <AISidePanel
+              isOpen={isSidePanelOpen}
+              onClose={() => setIsSidePanelOpen(false)}
+            />
           </motion.div>
         )}
       </AnimatePresence>

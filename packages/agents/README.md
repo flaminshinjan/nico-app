@@ -22,7 +22,9 @@ src/mastra/
 │   └── serp.ts
 └── lib/               # Shared helpers
     └── stream.ts
-``` We're excited to see what you'll build.
+```
+
+We're excited to see what you'll build.
 
 ## Getting Started
 

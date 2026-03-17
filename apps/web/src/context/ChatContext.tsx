@@ -121,12 +121,6 @@ function markAllStepsDone(steps: Step[]): Step[] {
   return steps.map((step): Step => ({ ...step, status: "done" }));
 }
 
-function wait(ms: number) {
-  return new Promise<void>((resolve) => {
-    window.setTimeout(resolve, ms);
-  });
-}
-
 function splitJsonRecords(value: string) {
   return value
     .split("\u001e")
@@ -135,6 +129,10 @@ function splitJsonRecords(value: string) {
 }
 
 type WorkflowStreamChunk =
+  | {
+      type: "data-workflow-stage";
+      data: { stage: "evaluating" | "searching" | "generating" };
+    }
   | {
       type: "data-document-token";
       data: { token: string };
@@ -182,6 +180,35 @@ function isDocumentResultChunk(chunk: WorkflowStreamChunk): chunk is {
     typeof chunk.data.markdown === "string" &&
     Array.isArray(chunk.data.sources)
   );
+}
+
+function isWorkflowStageChunk(chunk: WorkflowStreamChunk): chunk is {
+  type: "data-workflow-stage";
+  data: { stage: "evaluating" | "searching" | "generating" };
+} {
+  return (
+    chunk.type === "data-workflow-stage" &&
+    typeof chunk.data === "object" &&
+    chunk.data !== null &&
+    "stage" in chunk.data &&
+    (chunk.data.stage === "evaluating" ||
+      chunk.data.stage === "searching" ||
+      chunk.data.stage === "generating")
+  );
+}
+
+function stepsForStage(
+  stage: "evaluating" | "searching" | "generating",
+  skillId: string | null
+): Step[] {
+  const initial = getInitialSteps(skillId);
+  if (stage === "evaluating") {
+    return initial;
+  }
+  if (stage === "searching") {
+    return markSearchStepActive(initial);
+  }
+  return markGenerateStepActive(markSearchStepActive(initial));
 }
 
 export function ChatProvider({ children }: { children: ReactNode }) {
@@ -240,10 +267,8 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     ]);
 
     try {
-      await wait(600);
-
       updateAssistantMessage(assistantMessageId, {
-        steps: markSearchStepActive(getInitialSteps(selectedSkillId)),
+        steps: stepsForStage("evaluating", selectedSkillId),
       });
 
       const runResponse = await fetch("/api/mastra/workflows/documentWorkflow/create-run", {
@@ -265,7 +290,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         throw new Error("Mastra workflow run creation did not return a runId.");
       }
 
-      const workflowRequest = fetch(
+      const response = await fetch(
         `/api/mastra/workflows/documentWorkflow/stream?runId=${encodeURIComponent(runData.runId)}`,
         {
           method: "POST",
@@ -281,14 +306,6 @@ export function ChatProvider({ children }: { children: ReactNode }) {
           }),
         }
       );
-
-      await wait(400);
-
-      updateAssistantMessage(assistantMessageId, {
-        steps: markGenerateStepActive(markSearchStepActive(getInitialSteps(selectedSkillId))),
-      });
-
-      const response = await workflowRequest;
       if (!response.ok) {
         throw new Error(
           `Mastra workflow request failed with ${response.status} ${response.statusText}`
@@ -314,6 +331,12 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         for (const record of records) {
           const chunk = JSON.parse(record) as WorkflowStreamChunk;
 
+          if (isWorkflowStageChunk(chunk)) {
+            updateAssistantMessage(assistantMessageId, {
+              steps: stepsForStage(chunk.data.stage, selectedSkillId),
+            });
+          }
+
           if (isDocumentTokenChunk(chunk)) {
             appendAssistantToken(assistantMessageId, chunk.data.token);
           }
@@ -331,6 +354,12 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       const trailingRecords = splitJsonRecords(bufferedText);
       for (const record of trailingRecords) {
         const chunk = JSON.parse(record) as WorkflowStreamChunk;
+
+        if (isWorkflowStageChunk(chunk)) {
+          updateAssistantMessage(assistantMessageId, {
+            steps: stepsForStage(chunk.data.stage, selectedSkillId),
+          });
+        }
 
         if (isDocumentTokenChunk(chunk)) {
           appendAssistantToken(assistantMessageId, chunk.data.token);

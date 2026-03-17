@@ -67,11 +67,16 @@ function ErrorCard({
 }
 
 type AISidePanelProps = {
+  isOpen: boolean;
   onClose: () => void;
 };
 
-export function AISidePanel({ onClose }: AISidePanelProps) {
+export function AISidePanel({ isOpen, onClose }: AISidePanelProps) {
   const { messages, sendMessage, isLoading, selectedSkillId, setSelectedSkillId } = useChat();
+
+  if (!isOpen) {
+    return null;
+  }
   const { embedGeneratedContent } = useDocumentEditor();
   const [inputValue, setInputValue] = useState("");
   const [previewDoc, setPreviewDoc] = useState<GeneratedDoc | null>(null);

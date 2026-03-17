@@ -9,6 +9,7 @@
     "lint": "eslint ."
   },
   "dependencies": {
+    "@nico/agents": "workspace:*",
     "@ckeditor/ckeditor5-build-classic": "^41.0.0",
     "@ckeditor/ckeditor5-react": "^9.0.0",
     "@mohtasham/md-to-docx": "^2.9.0",

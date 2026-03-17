@@ -1,11 +1,30 @@
 # Cursor for Word
 
-AI-powered document editing platform with CKEditor 5. Frontend (web) and backend (API) run on **separate hosts**.
+Monorepo for the document editor frontend, the supporting backend API, and agent-related packages.
 
 ## Prerequisites
 
 - Node.js 20+
 - pnpm 9+
+
+## Repo Navigation
+
+```text
+nico-app/
+├── apps/
+│   ├── backend/    Express + TypeScript API for document conversion and provider proxies
+│   └── web/        React application with the editor UI
+├── packages/
+│   └── agents/     Agent and workflow-related package code
+├── turbo.json      Turbo task graph
+└── pnpm-workspace.yaml
+```
+
+Open these first:
+
+- `apps/backend/README.md` for backend architecture, route ownership, env vars, and operational details
+- `apps/web/package.json` for frontend scripts
+- `packages/agents/README.md` for agent package details
 
 ## Setup
 
@@ -15,46 +34,53 @@ AI-powered document editing platform with CKEditor 5. Frontend (web) and backend
    pnpm install
    ```
 
-2. **Backend** — create `apps/backend/.env`:
+2. Create the backend env file:
 
    ```bash
    cp apps/backend/.env.example apps/backend/.env
    ```
 
-   Set `SERP_API_KEY` and `GROQ_API_KEY` in `.env`.
-
-3. **Frontend** — create `apps/web/.env`:
+3. Create the frontend env file:
 
    ```bash
    cp apps/web/.env.example apps/web/.env
    ```
 
-   Set `VITE_API_URL` to your backend origin (e.g. `http://localhost:4000`).
+4. Point the frontend to the backend by setting `VITE_API_URL` in `apps/web/.env` if the apps run on different origins.
 
-4. Start both (from repo root):
+## Common Commands
 
-   ```bash
-   pnpm dev
-   ```
-
-   - Frontend: http://localhost:3000  
-   - Backend: http://localhost:4000  
-
-   Or run separately: `pnpm --filter backend dev` and `pnpm --filter web dev`.
-
-## Features
-
-- **Document editor** – CKEditor 5 with Word-like styling. Import .docx, download as .docx.
-- **AI-generated content** – Content from "Cursor for Word" is embedded into the editor.
-- **Backend API** – Documents (markdown↔html, html→docx), SerpAPI proxy, Groq proxy; keys live on the backend.
-
-## Project Structure
-
+```bash
+pnpm dev
+pnpm build
+pnpm lint
 ```
-nico-app/
-├── apps/
-│   ├── backend/   Express + TypeScript API (port 4000)
-│   └── web/       React SPA with CKEditor 5 (port 3000)
-├── turbo.json
-└── pnpm-workspace.yaml
+
+To run apps separately:
+
+```bash
+pnpm --filter backend dev
+pnpm --filter web dev
 ```
+
+Default local ports:
+
+- Frontend: `http://localhost:3000`
+- Backend: `http://localhost:4000`
+
+## What Lives Where
+
+- `apps/web` contains the user-facing editor, hooks, React state, and UI components.
+- `apps/backend` contains the HTTP API, validation, middleware, controller/service/client layers, and backend tests.
+- `packages/agents` contains agent-specific logic and related package tooling.
+
+## Backend Notes
+
+The backend intentionally keeps third-party credentials server-side and exposes a stable API to the frontend:
+
+- `/health`
+- `/api/documents/*`
+- `/api/serp/search.json`
+- `/api/groq/openai/v1/chat/completions`
+
+For route behavior, security defaults, and every backend env var, use the backend guide in `apps/backend/README.md`.

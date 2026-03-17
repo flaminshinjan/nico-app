@@ -4,6 +4,7 @@ import { useChat } from "@/context/ChatContext";
 import { SkillSelector } from "@/components/ai/SkillSelector";
 
 type FloatingChatBarProps = {
+  isOpen?: boolean;
   onOpen: () => void;
 };
 
@@ -14,12 +15,16 @@ const HINTS = [
   { text: "Ask anything about your document", kbd: null, suffix: null },
 ];
 
-export function FloatingChatBar({ onOpen }: FloatingChatBarProps) {
+export function FloatingChatBar({ isOpen = false, onOpen }: FloatingChatBarProps) {
   const { sendMessage, isLoading, selectedSkillId, setSelectedSkillId } = useChat();
   const [value, setValue] = useState("");
   const [hintIndex, setHintIndex] = useState(0);
   const [isFocused, setIsFocused] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  if (isOpen) {
+    return null;
+  }
 
   useEffect(() => {
     const interval = setInterval(() => {
