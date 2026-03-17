@@ -40,6 +40,7 @@ type DocumentEditorContextValue = {
   headings: OutlineItem[];
   title: string;
   setTitle: (title: string) => void;
+  setInitialContent: (html: string) => void;
   notifyContentChange: () => void;
 };
 
@@ -70,6 +71,14 @@ export function DocumentEditorProvider({ children }: { children: ReactNode }) {
       editorApiRef.current = null;
       setHeadings([]);
     };
+  }, []);
+
+  const setInitialContent = useCallback((html: string) => {
+    if (editorApiRef.current) {
+      editorApiRef.current.setData(html);
+    } else {
+      pendingHtmlRef.current = html;
+    }
   }, []);
 
   const embedGeneratedContent = useCallback(async (doc: GeneratedDoc) => {
@@ -105,9 +114,10 @@ export function DocumentEditorProvider({ children }: { children: ReactNode }) {
       headings,
       title,
       setTitle,
+      setInitialContent,
       notifyContentChange,
     }),
-    [registerEditor, embedGeneratedContent, isEmbedding, headings, title, notifyContentChange]
+    [registerEditor, embedGeneratedContent, isEmbedding, headings, title, setInitialContent, notifyContentChange]
   );
 
   return (

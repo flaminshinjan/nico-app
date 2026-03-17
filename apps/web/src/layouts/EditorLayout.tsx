@@ -5,9 +5,7 @@ import { DocumentEditorPanel } from "@/components/editor/DocumentEditorPanel";
 import { AISidePanel } from "@/components/ai/AISidePanel";
 import { FloatingChatBar } from "@/components/editor/FloatingChatBar";
 import { LoadingBar } from "@/components/ui/LoadingBar";
-import { ChatProvider, useChat } from "@/context/ChatContext";
-import { DocumentEditorProvider } from "@/context/DocumentEditorContext";
-import { ThemeProvider } from "@/context/ThemeContext";
+import { useChat } from "@/context/ChatContext";
 
 function LayoutInner() {
   const [isSidePanelOpen, setIsSidePanelOpen] = useState(false);
@@ -56,13 +54,5 @@ function LayoutInner() {
 }
 
 export function EditorLayout() {
-  return (
-    <ThemeProvider>
-      <ChatProvider>
-        <DocumentEditorProvider>
-          <LayoutInner />
-        </DocumentEditorProvider>
-      </ChatProvider>
-    </ThemeProvider>
-  );
+  return <LayoutInner />;
 }
