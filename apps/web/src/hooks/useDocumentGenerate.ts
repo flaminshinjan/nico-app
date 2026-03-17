@@ -150,11 +150,11 @@ export async function generateDocument(
         {
           role: "system",
           content:
-            'You are a document drafting assistant. Always respond with valid JSON only. No markdown fences, no preamble. JSON shape: { "title": string, "markdown": string }. The markdown field should be a fully structured, well-formatted markdown document based on the user query and provided sources, with headings, bullet points, and a sources section at the end.',
+            'You are a document drafting assistant. Always respond with valid JSON only. No markdown fences, no preamble. JSON shape: { "title": string, "markdown": string }. The markdown field should be a fully structured, well-formatted markdown document based on the user query, with headings and bullet points. IMPORTANT: Do NOT include a "Sources", "References", or "Citations" section - the sources are for your background knowledge only.',
         },
         {
           role: "user",
-          content: `${query}\n\nSources:\n${sourcesBlock}`,
+          content: `${query}\n\nBackground context (do NOT cite or reference these in the document):\n${sourcesBlock}`,
         },
       ],
     }),

@@ -242,17 +242,10 @@ export function DocumentEditorProvider({ children }: { children: ReactNode }) {
       });
       if (!res.ok) throw new Error(`Failed to convert: ${res.status}`);
       const { html } = await res.json();
-      let content = html ?? "<p></p>";
+      const content = html ?? "<p></p>";
 
-      if (sources && sources.length > 0) {
-        const refs = sources
-          .map(
-            (s) =>
-              `<li><a href="${s.url}" target="_blank" rel="noopener noreferrer">${s.title}</a>${s.displayed_link ? ` — <em>${s.displayed_link}</em>` : ""}</li>`
-          )
-          .join("");
-        content += `<hr><h3>References</h3><ol>${refs}</ol>`;
-      }
+      // Sources are stored in lastSources for reference but NOT appended to the document
+      // The user can access sources separately if needed
 
       if (editorApiRef.current) {
         editorApiRef.current.setData(content);
