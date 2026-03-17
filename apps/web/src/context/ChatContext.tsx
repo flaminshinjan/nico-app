@@ -4,6 +4,8 @@ import {
   useContext,
   useMemo,
   useState,
+  useEffect,
+  useRef,
   type ReactNode,
 } from "react";
 
@@ -43,6 +45,7 @@ type ChatContextValue = {
   messages: Message[];
   isLoading: boolean;
   sendMessage: (content: string) => Promise<void>;
+  setInitialMessage: (content: string | null) => void;
 };
 
 const ChatContext = createContext<ChatContextValue | undefined>(undefined);
@@ -153,6 +156,8 @@ function isDocumentResultChunk(chunk: WorkflowStreamChunk): chunk is {
 export function ChatProvider({ children }: { children: ReactNode }) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [initialMessage, setInitialMessage] = useState<string | null>(null);
+  const hasSentInitialRef = useRef(false);
 
   const updateAssistantMessage = useCallback(
     (id: string, patch: Partial<AssistantMessage>) => {
@@ -336,11 +341,20 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     }
   }, [appendAssistantToken, updateAssistantMessage]);
 
+  useEffect(() => {
+    if (initialMessage && !hasSentInitialRef.current) {
+      hasSentInitialRef.current = true;
+      sendMessage(initialMessage);
+      setInitialMessage(null);
+    }
+  }, [initialMessage, sendMessage]);
+
   const value = useMemo<ChatContextValue>(
     () => ({
       messages,
       isLoading,
       sendMessage,
+      setInitialMessage,
     }),
     [isLoading, messages, sendMessage]
   );

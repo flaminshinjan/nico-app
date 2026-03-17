@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { useDocumentEditor } from "@/context/DocumentEditorContext";
+import { useChat } from "@/context/ChatContext";
 import mammoth from "mammoth";
 
 interface DashboardProps {
@@ -19,11 +20,29 @@ const TEMPLATES = [
 export function Dashboard({ onNavigate }: DashboardProps) {
   const [query, setQuery] = useState("");
   const { setInitialContent, setTitle } = useDocumentEditor();
+  const { setInitialMessage } = useChat();
 
   const handleStartBlank = () => {
     setInitialContent("<p></p>");
     setTitle("Untitled Document");
     onNavigate();
+  };
+
+  const handleSubmit = () => {
+    const trimmedQuery = query.trim();
+    if (!trimmedQuery) return;
+    setInitialMessage(trimmedQuery);
+
+    setInitialContent("<p></p>");
+    setTitle("Untitled Document");
+    onNavigate();
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSubmit();
+    }
   };
 
   const handleImport = () => {
@@ -48,7 +67,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
 
   return (
     <div className="min-h-screen bg-[#FDFDFD] dark:bg-canvas-base flex flex-col items-center px-6 pt-32 pb-12 relative overflow-y-auto">
-      <motion.div 
+      <motion.div
         className="w-full max-w-4xl space-y-20 relative z-10"
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
@@ -62,13 +81,14 @@ export function Dashboard({ onNavigate }: DashboardProps) {
                 type="text"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
+                onKeyDown={handleKeyDown}
                 placeholder="Ask or start writing..."
                 className="w-full bg-transparent px-5 py-3 text-[16px] outline-none text-content-primary placeholder:text-content-tertiary/40 font-normal"
               />
-              
+
               <div className="flex items-center gap-1.5 pr-2">
                 {/* Integrated Import Icon */}
-                <button 
+                <button
                   onClick={handleImport}
                   className="p-2 text-content-tertiary hover:text-accent hover:bg-canvas-hover rounded-lg transition-all"
                   title="Import .docx"
@@ -77,12 +97,12 @@ export function Dashboard({ onNavigate }: DashboardProps) {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
                   </svg>
                 </button>
-                
+
                 {/* Send/Start Arrow */}
-                <button 
+                <button
                   className="p-2 bg-accent/5 text-accent hover:bg-accent hover:text-content-inverse rounded-lg transition-all disabled:opacity-20 disabled:bg-transparent disabled:text-content-tertiary"
                   disabled={!query.trim()}
-                  onClick={handleStartBlank}
+                  onClick={handleSubmit}
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 12h14M12 5l7 7-7 7" />

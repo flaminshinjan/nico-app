@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { DocumentOutlinePanel } from "@/components/sidebar/DocumentOutlinePanel";
 import { DocumentEditorPanel } from "@/components/editor/DocumentEditorPanel";
@@ -9,7 +9,13 @@ import { useChat } from "@/context/ChatContext";
 
 function LayoutInner() {
   const [isSidePanelOpen, setIsSidePanelOpen] = useState(false);
-  const { isLoading } = useChat();
+  const { isLoading, messages } = useChat();
+
+  useEffect(() => {
+    if (messages.length > 0) {
+      setIsSidePanelOpen(true);
+    }
+  }, [messages.length]);
 
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-canvas-base p-2 gap-2">
