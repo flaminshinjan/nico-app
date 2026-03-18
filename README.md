@@ -6,6 +6,8 @@ AI-powered document editing platform with CKEditor 5. Frontend (web) and backend
 
 - Node.js 20+
 - pnpm 9+
+- Docker Desktop (optional, required for high-fidelity DOCX mode)
+- Python 3 + `pipx` (recommended) or `pip` for `unoconvert` client binary
 
 ## Setup
 
@@ -31,7 +33,7 @@ AI-powered document editing platform with CKEditor 5. Frontend (web) and backend
 
    Set `VITE_API_URL` to your backend origin (e.g. `http://localhost:4000`).
 
-4. Start both (from repo root):
+4. Start app services (default mode, no Unoserver):
 
    ```bash
    pnpm dev
@@ -41,6 +43,60 @@ AI-powered document editing platform with CKEditor 5. Frontend (web) and backend
    - Backend: http://localhost:4000  
 
    Or run separately: `pnpm --filter backend dev` and `pnpm --filter web dev`.
+
+## High-Fidelity DOCX Mode (Unoserver + LibreOffice)
+
+Use this mode when you want better style preservation for DOCX import/export.
+
+1. Start Docker Desktop and verify daemon is running:
+
+   ```bash
+   docker info
+   ```
+
+2. Build and run Unoserver container:
+
+   ```bash
+   docker compose -f infra/docker-compose.yml --profile docx up -d --build
+   ```
+
+3. Install local `unoconvert` client binary (used by backend to call Unoserver):
+
+   ```bash
+   pipx install unoserver
+   ```
+
+   If `pipx` is unavailable, use:
+
+   ```bash
+   python3 -m pip install --user unoserver
+   ```
+
+4. In `apps/backend/.env`, set these values:
+
+   ```env
+   DOCX_CONVERSION_MODE=hybrid
+   UNOSERVER_URL=http://127.0.0.1:2003
+   UNOCONVERT_BIN=unoconvert
+   ```
+
+5. Start app:
+
+   ```bash
+   pnpm dev
+   ```
+
+6. Verify conversion health:
+
+   ```bash
+   curl http://localhost:4000/api/documents/health
+   ```
+
+7. Stop Unoserver when done:
+
+   ```bash
+   docker compose -f infra/docker-compose.yml --profile docx down
+   ```
 
 ## Features
 

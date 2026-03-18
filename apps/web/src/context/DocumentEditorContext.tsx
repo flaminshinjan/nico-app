@@ -47,6 +47,15 @@ export type EditorApi = {
   getEditorElement?: () => HTMLElement | null;
 };
 
+export type ImportMode = "visual-preserve" | "semantic-edit";
+
+export type ImportMetadata = {
+  fileName: string;
+  mode: ImportMode;
+  engine: "uno" | "mammoth";
+  importedAt: number;
+};
+
 type DocumentEditorContextValue = {
   registerEditor: (api: EditorApi) => () => void;
   embedGeneratedContent: (doc: GeneratedDoc, sources?: SerpResult[]) => Promise<void>;
@@ -62,12 +71,17 @@ type DocumentEditorContextValue = {
   switchDocument: (id: string) => void;
   editorApiRef: React.RefObject<EditorApi | null>;
   lastSources: SerpResult[];
+  importMode: ImportMode;
+  setImportMode: (mode: ImportMode) => void;
+  lastImportMetadata: ImportMetadata | null;
+  setLastImportMetadata: (meta: ImportMetadata | null) => void;
 };
 
 const DocumentEditorContext = createContext<DocumentEditorContextValue | undefined>(undefined);
 
 const DOCS_KEY = "nico-documents";
 const ACTIVE_KEY = "nico-active-doc";
+const IMPORT_MODE_KEY = "nico-import-mode";
 
 function loadDocs(): StoredDocument[] {
   try {
@@ -97,6 +111,11 @@ export function DocumentEditorProvider({ children }: { children: ReactNode }) {
   const [isEmbedding, setIsEmbedding] = useState(false);
   const [headings, setHeadings] = useState<OutlineItem[]>([]);
   const [lastSources, setLastSources] = useState<SerpResult[]>([]);
+  const [lastImportMetadata, setLastImportMetadata] = useState<ImportMetadata | null>(null);
+  const [importMode, setImportModeState] = useState<ImportMode>(() => {
+    const raw = localStorage.getItem(IMPORT_MODE_KEY);
+    return raw === "semantic-edit" ? "semantic-edit" : "visual-preserve";
+  });
   const saveTimerRef = useRef<ReturnType<typeof setTimeout>>();
 
   const [documents, setDocuments] = useState<StoredDocument[]>(() => {
@@ -127,6 +146,14 @@ export function DocumentEditorProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     localStorage.setItem(ACTIVE_KEY, activeDocId);
   }, [activeDocId]);
+
+  useEffect(() => {
+    localStorage.setItem(IMPORT_MODE_KEY, importMode);
+  }, [importMode]);
+
+  const setImportMode = useCallback((mode: ImportMode) => {
+    setImportModeState(mode);
+  }, []);
 
   const setTitle = useCallback((newTitle: string) => {
     setTitleState(newTitle);
@@ -275,6 +302,10 @@ export function DocumentEditorProvider({ children }: { children: ReactNode }) {
       switchDocument,
       editorApiRef: editorApiRef as React.RefObject<EditorApi | null>,
       lastSources,
+      importMode,
+      setImportMode,
+      lastImportMetadata,
+      setLastImportMetadata,
     }),
     [
       registerEditor,
@@ -290,6 +321,9 @@ export function DocumentEditorProvider({ children }: { children: ReactNode }) {
       deleteDocument,
       switchDocument,
       lastSources,
+      importMode,
+      setImportMode,
+      lastImportMetadata,
     ]
   );
 

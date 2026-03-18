@@ -1,9 +1,21 @@
 import type { IRouter } from "express";
 import { Router } from "express";
 import { marked } from "marked";
-import HTMLtoDOCX from "html-to-docx";
+import multer from "multer";
+import {
+  convertDocxBufferToHtml,
+  convertHtmlToDocx,
+  getDocxConversionHealth,
+  getUploadLimitBytes,
+  toConversionError,
+  type DocxFidelity,
+} from "../services/docxConversion.js";
 
 export const documentsRouter: IRouter = Router();
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: getUploadLimitBytes() },
+});
 
 // Block type definitions (mirrors schema from @nico/agents)
 interface HeadingBlock {
@@ -182,14 +194,7 @@ documentsRouter.post("/blocks-to-html", async (req, res) => {
 documentsRouter.post("/html-to-docx", async (req, res) => {
   try {
     const html = typeof req.body?.html === "string" ? req.body.html : "<p></p>";
-    const result = await HTMLtoDOCX(html, null, {
-      table: { row: { cantSplit: true } },
-      footer: true,
-      pageNumber: true,
-    });
-    const buffer = Buffer.isBuffer(result)
-      ? result
-      : Buffer.from(await (result as Blob).arrayBuffer());
+    const { buffer } = await convertHtmlToDocx(html, "balanced");
     res
       .setHeader(
         "Content-Type",
@@ -199,6 +204,75 @@ documentsRouter.post("/html-to-docx", async (req, res) => {
       .send(buffer);
   } catch (err) {
     console.error("[documents] html-to-docx", err);
+    const mapped = toConversionError(err);
+    res.status(mapped.status).json({ error: mapped.error, hint: mapped.hint });
+  }
+});
+
+documentsRouter.get("/health", async (_req, res) => {
+  try {
+    const conversion = await getDocxConversionHealth();
+    res.json({ status: "ok", conversion });
+  } catch (err) {
+    console.error("[documents] health", err);
     res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+documentsRouter.post("/docx-to-html", upload.single("file"), async (req, res) => {
+  try {
+    const file = req.file;
+    if (!file) {
+      res.status(400).json({ error: "Missing DOCX file. Expected multipart field 'file'." });
+      return;
+    }
+
+    const isDocxName = file.originalname.toLowerCase().endsWith(".docx");
+    const isDocxMime = file.mimetype.includes("officedocument.wordprocessingml.document");
+    if (!isDocxName && !isDocxMime) {
+      res.status(400).json({ error: "Only .docx files are supported." });
+      return;
+    }
+
+    const result = await convertDocxBufferToHtml(file.buffer);
+    res.json({
+      html: result.html,
+      engine: result.engine,
+      fileName: file.originalname,
+    });
+  } catch (err) {
+    console.error("[documents] docx-to-html", err);
+    const mapped = toConversionError(err);
+    res.status(mapped.status).json({ error: mapped.error, hint: mapped.hint });
+  }
+});
+
+documentsRouter.post("/html-to-docx-fidelity", async (req, res) => {
+  try {
+    const html = typeof req.body?.html === "string" ? req.body.html : "<p></p>";
+    const fidelityRaw = req.body?.fidelity;
+    const fidelity: DocxFidelity =
+      fidelityRaw === "full" || fidelityRaw === "balanced" || fidelityRaw === "compatible"
+        ? fidelityRaw
+        : "full";
+    const fileNameBase =
+      typeof req.body?.title === "string" && req.body.title.trim().length > 0
+        ? req.body.title
+        : "document";
+    const safeName = fileNameBase.replace(/[\\/:*?"<>|]/g, "").trim() || "document";
+
+    const { buffer, engine } = await convertHtmlToDocx(html, fidelity);
+    res
+      .setHeader(
+        "Content-Type",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+      )
+      .setHeader("X-Docx-Engine", engine)
+      .setHeader("Content-Disposition", `attachment; filename="${safeName}.docx"`)
+      .send(buffer);
+  } catch (err) {
+    console.error("[documents] html-to-docx-fidelity", err);
+    const mapped = toConversionError(err);
+    res.status(mapped.status).json({ error: mapped.error, hint: mapped.hint });
   }
 });

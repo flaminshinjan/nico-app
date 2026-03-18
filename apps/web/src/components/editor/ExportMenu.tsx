@@ -14,7 +14,8 @@ type ExportMenuProps = {
 
 const EXPORT_OPTIONS = [
   { id: "pdf", label: "PDF", icon: "M7 21h10a2 2 0 002-2V9l-5-5H7a2 2 0 00-2 2v12a2 2 0 002 2z" },
-  { id: "docx", label: "Word (.docx)", icon: "M4 4v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6H6a2 2 0 00-2 2z" },
+  { id: "docx", label: "Word (.docx) - Full Fidelity", icon: "M4 4v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6H6a2 2 0 00-2 2z" },
+  { id: "docx-compatible", label: "Word (.docx) - Compatible", icon: "M4 4v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6H6a2 2 0 00-2 2z" },
   { id: "md", label: "Markdown", icon: "M3 7v10h4l2-3 2 3h4V7" },
   { id: "html", label: "HTML File", icon: "M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" },
   { id: "copy", label: "Copy as Markdown", icon: "M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" },
@@ -40,7 +41,8 @@ export function ExportMenu({ getHtml, title }: ExportMenuProps) {
     try {
       switch (id) {
         case "pdf": exportAsPdf(html, title); break;
-        case "docx": await exportAsDocx(html, title); break;
+        case "docx": await exportAsDocx(html, title, { fidelity: "full" }); break;
+        case "docx-compatible": await exportAsDocx(html, title, { fidelity: "compatible" }); break;
         case "md": exportAsMarkdown(html, title); break;
         case "html": exportAsHtml(html, title); break;
         case "copy": copyHtmlToClipboard(html); setStatus("Copied!"); setTimeout(() => setStatus(null), 1500); setOpen(false); return;

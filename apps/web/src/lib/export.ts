@@ -1,5 +1,11 @@
 import { getApiUrl } from "@/lib/api";
 
+export type DocxExportFidelity = "full" | "balanced" | "compatible";
+
+type DocxExportOptions = {
+  fidelity?: DocxExportFidelity;
+};
+
 function nodeToMarkdown(node: Node, listIndex = 0): string {
   if (node.nodeType === Node.TEXT_NODE) return node.textContent ?? "";
   if (node.nodeType !== Node.ELEMENT_NODE) return "";
@@ -39,13 +45,25 @@ export function htmlToMarkdown(html: string): string {
   return nodeToMarkdown(doc.body).replace(/\n{3,}/g, "\n\n").trim();
 }
 
-export async function exportAsDocx(html: string, title: string) {
-  const res = await fetch(`${getApiUrl()}/api/documents/html-to-docx`, {
+export async function exportAsDocx(html: string, title: string, options: DocxExportOptions = {}) {
+  const fidelity = options.fidelity ?? "full";
+  const res = await fetch(`${getApiUrl()}/api/documents/html-to-docx-fidelity`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ html }),
+    body: JSON.stringify({ html, title, fidelity }),
   });
-  if (!res.ok) throw new Error("DOCX export failed");
+  if (!res.ok) {
+    // Keep legacy endpoint as fallback for compatibility mode during rollout.
+    const legacyRes = await fetch(`${getApiUrl()}/api/documents/html-to-docx`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ html }),
+    });
+    if (!legacyRes.ok) throw new Error("DOCX export failed");
+    const legacyBlob = await legacyRes.blob();
+    downloadBlob(legacyBlob, `${sanitizeFilename(title)}.docx`);
+    return;
+  }
   const blob = await res.blob();
   downloadBlob(blob, `${sanitizeFilename(title)}.docx`);
 }

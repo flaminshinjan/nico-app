@@ -26,6 +26,7 @@ import cors from "cors";
 import { documentsRouter } from "./routes/documents.js";
 import { serpRouter } from "./routes/serp.js";
 import { groqRouter } from "./routes/groq.js";
+import { getDocxConversionHealth } from "./services/docxConversion.js";
 
 const app = express();
 const port = Number(process.env.PORT) || 4000;
@@ -37,13 +38,21 @@ app.use("/api/documents", documentsRouter);
 app.use("/api/serp", serpRouter);
 app.use("/api/groq", groqRouter);
 
-app.get("/health", (_req, res) => {
+app.get("/health", async (_req, res) => {
+  const conversion = await getDocxConversionHealth().catch(() => ({
+    mode: "hybrid",
+    unoconvert: "missing",
+    unoserver: "unreachable",
+    fallback: "ready",
+  }));
+
   res.json({
     status: "ok",
     env: {
       GROQ_API_KEY: envSet("GROQ_API_KEY", "VITE_GROQ_API_KEY") ? "set" : "missing",
       SERP_API_KEY: envSet("SERP_API_KEY", "VITE_SERP_API_KEY") ? "set" : "missing",
     },
+    conversion,
   });
 });
 

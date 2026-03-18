@@ -1,25 +1,40 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type ChangeEvent } from "react";
 import { CKEditor } from "@ckeditor/ckeditor5-react";
 import ClassicEditor from "@ckeditor/ckeditor5-build-classic";
 import mammoth from "mammoth";
 import {
   useDocumentEditor,
   parseHeadingsFromHtml,
+  type ImportMode,
+  type ImportMetadata,
 } from "@/context/DocumentEditorContext";
 import { ExportMenu } from "@/components/editor/ExportMenu";
 import { InlineAIToolbar } from "@/components/editor/InlineAIToolbar";
 import { GhostText } from "@/components/editor/GhostText";
+import { getApiUrl } from "@/lib/api";
+import { DocxImportPreviewModal } from "@/components/editor/DocxImportPreviewModal";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type RawEditor = any;
 
 export function DocumentEditor() {
-  const { registerEditor, notifyContentChange, title } = useDocumentEditor();
+  const {
+    registerEditor,
+    notifyContentChange,
+    title,
+    importMode,
+    setImportMode,
+    setLastImportMetadata,
+  } = useDocumentEditor();
   const editorRef = useRef<RawEditor>(null);
   const unregisterRef = useRef<(() => void) | null>(null);
   const [data, setData] = useState(
     "<p>Start typing or import a .docx file.</p>"
   );
+  const [pendingImport, setPendingImport] = useState<{
+    html: string;
+    metadata: ImportMetadata;
+  } | null>(null);
   const [editorEl, setEditorEl] = useState<HTMLElement | null>(null);
 
   const handleEditorReady = useCallback(
@@ -75,6 +90,30 @@ export function DocumentEditor() {
     };
   }, []);
 
+  const importViaMammoth = useCallback(async (file: File) => {
+    const arrayBuffer = await file.arrayBuffer();
+    const result = await mammoth.convertToHtml({ arrayBuffer });
+    return result.value || "<p></p>";
+  }, []);
+
+  const importViaBackend = useCallback(async (file: File) => {
+    const form = new FormData();
+    form.append("file", file);
+
+    const res = await fetch(`${getApiUrl()}/api/documents/docx-to-html`, {
+      method: "POST",
+      body: form,
+    });
+    if (!res.ok) {
+      throw new Error("Backend DOCX import failed");
+    }
+    const data = (await res.json()) as { html?: string; engine?: "uno" };
+    return {
+      html: data.html || "<p></p>",
+      engine: data.engine || "uno",
+    };
+  }, []);
+
   const handleImportDocx = useCallback(() => {
     const input = document.createElement("input");
     input.type = "file";
@@ -83,18 +122,59 @@ export function DocumentEditor() {
       const file = (e.target as HTMLInputElement).files?.[0];
       if (!file) return;
       try {
-        const arrayBuffer = await file.arrayBuffer();
-        const result = await mammoth.convertToHtml({ arrayBuffer });
-        const html = result.value;
-        if (editorRef.current) editorRef.current.setData(html || "<p></p>");
-        else setData(html || "<p></p>");
-        notifyContentChange();
+        let html = "<p></p>";
+        let engine: "uno" | "mammoth" = "mammoth";
+
+        if (importMode === "visual-preserve") {
+          try {
+            const backendResult = await importViaBackend(file);
+            html = backendResult.html;
+            engine = backendResult.engine;
+          } catch (err) {
+            console.warn("Backend DOCX import failed, falling back to mammoth", err);
+            html = await importViaMammoth(file);
+          }
+        } else {
+          html = await importViaMammoth(file);
+        }
+
+        setPendingImport({
+          html,
+          metadata: {
+            fileName: file.name,
+            mode: importMode,
+            engine,
+            importedAt: Date.now(),
+          },
+        });
       } catch (err) {
         console.error("Failed to import .docx:", err);
       }
     };
     input.click();
-  }, [notifyContentChange]);
+  }, [importMode, importViaBackend, importViaMammoth]);
+
+  const confirmImportPreview = useCallback(() => {
+    if (!pendingImport) return;
+
+    if (editorRef.current) editorRef.current.setData(pendingImport.html || "<p></p>");
+    else setData(pendingImport.html || "<p></p>");
+
+    setLastImportMetadata(pendingImport.metadata);
+    notifyContentChange();
+    setPendingImport(null);
+  }, [notifyContentChange, pendingImport, setLastImportMetadata]);
+
+  const closeImportPreview = useCallback(() => {
+    setPendingImport(null);
+  }, []);
+
+  const handleImportModeChange = useCallback(
+    (event: ChangeEvent<HTMLSelectElement>) => {
+      setImportMode(event.target.value as ImportMode);
+    },
+    [setImportMode]
+  );
 
   const handleAddPageBreak = useCallback(() => {
     const pageBreakHtml = '<hr class="page-break" />';
@@ -155,6 +235,15 @@ export function DocumentEditor() {
         >
           Import .docx
         </button>
+        <select
+          value={importMode}
+          onChange={handleImportModeChange}
+          className="h-8 px-2.5 text-xs text-content-secondary bg-canvas-elevated border border-border-default rounded-md hover:text-content-primary"
+          aria-label="DOCX import mode"
+        >
+          <option value="visual-preserve">Preserve styling</option>
+          <option value="semantic-edit">Semantic edit</option>
+        </select>
         <ExportMenu getHtml={getHtml} title={title} />
         <div className="flex-1" />
         <button
@@ -199,6 +288,16 @@ export function DocumentEditor() {
         getContextText={getContextText}
         onAccept={handleAcceptSuggestion}
       />
+
+      {pendingImport && (
+        <DocxImportPreviewModal
+          fileName={pendingImport.metadata.fileName}
+          html={pendingImport.html}
+          engine={pendingImport.metadata.engine}
+          onClose={closeImportPreview}
+          onConfirm={confirmImportPreview}
+        />
+      )}
     </div>
   );
 }
