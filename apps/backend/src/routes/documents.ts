@@ -1,9 +1,12 @@
 import type { IRouter } from "express";
 import { Router } from "express";
 import { marked } from "marked";
-import HTMLtoDOCX from "html-to-docx";
+import multer from "multer";
+import mammoth from "mammoth";
+import { htmlToDocxBufferStructured } from "../lib/docxStructured.js";
 
 export const documentsRouter: IRouter = Router();
+const upload = multer({ storage: multer.memoryStorage() });
 
 // Block type definitions (mirrors schema from @nico/agents)
 interface HeadingBlock {
@@ -179,17 +182,41 @@ documentsRouter.post("/blocks-to-html", async (req, res) => {
   }
 });
 
+documentsRouter.post("/import-docx", upload.single("file"), async (req, res) => {
+  try {
+    if (!req.file) {
+      res.status(400).json({ error: "No file uploaded" });
+      return;
+    }
+
+    const result = await mammoth.convertToHtml(
+      { buffer: req.file.buffer },
+      {
+        styleMap: [
+          "p[style-name='Heading 1'] => h1:fresh",
+          "p[style-name='Heading 2'] => h2:fresh",
+          "p[style-name='Heading 3'] => h3:fresh",
+          "p[style-name='Heading 4'] => h4:fresh",
+          "p[style-name='List Paragraph'] => ul > li:fresh",
+          "r[style-name='Strong'] => strong",
+          "r[style-name='Emphasis'] => em",
+          "table => table",
+        ],
+        convertImage: mammoth.images.dataUri,
+      }
+    );
+
+    res.json({ html: result.value, warnings: result.messages });
+  } catch (err) {
+    console.error("[documents] import-docx", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 documentsRouter.post("/html-to-docx", async (req, res) => {
   try {
     const html = typeof req.body?.html === "string" ? req.body.html : "<p></p>";
-    const result = await HTMLtoDOCX(html, null, {
-      table: { row: { cantSplit: true } },
-      footer: true,
-      pageNumber: true,
-    });
-    const buffer = Buffer.isBuffer(result)
-      ? result
-      : Buffer.from(await (result as Blob).arrayBuffer());
+    const buffer = await htmlToDocxBufferStructured(html);
     res
       .setHeader(
         "Content-Type",

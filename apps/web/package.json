@@ -9,14 +9,13 @@
     "lint": "eslint ."
   },
   "dependencies": {
-    "@ckeditor/ckeditor5-build-classic": "^41.0.0",
-    "@ckeditor/ckeditor5-react": "^9.0.0",
+    "@ckeditor/ckeditor5-build-classic": "41.4.2",
+    "@ckeditor/ckeditor5-react": "6.3.0",
     "@mohtasham/md-to-docx": "^2.9.0",
     "@nico/agents": "workspace:*",
     "docx": "^9.5.0",
     "framer-motion": "^12.37.0",
     "html-to-docx": "^1.8.0",
-    "mammoth": "^1.8.0",
     "marked": "^15.0.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"

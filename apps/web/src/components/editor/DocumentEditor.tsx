@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { CKEditor } from "@ckeditor/ckeditor5-react";
 import ClassicEditor from "@ckeditor/ckeditor5-build-classic";
-import mammoth from "mammoth";
 import {
   useDocumentEditor,
   parseHeadingsFromHtml,
 } from "@/context/DocumentEditorContext";
+import { getApiUrl } from "@/lib/api";
 import { ExportMenu } from "@/components/editor/ExportMenu";
 import { InlineAIToolbar } from "@/components/editor/InlineAIToolbar";
 import { GhostText } from "@/components/editor/GhostText";
@@ -82,10 +82,22 @@ export function DocumentEditor() {
     input.onchange = async (e) => {
       const file = (e.target as HTMLInputElement).files?.[0];
       if (!file) return;
+
       try {
-        const arrayBuffer = await file.arrayBuffer();
-        const result = await mammoth.convertToHtml({ arrayBuffer });
-        const html = result.value;
+        const formData = new FormData();
+        formData.append("file", file);
+
+        const response = await fetch(`${getApiUrl()}/api/documents/import-docx`, {
+          method: "POST",
+          body: formData,
+        });
+
+        if (!response.ok) {
+          console.error("Import failed", await response.text());
+          return;
+        }
+
+        const { html } = (await response.json()) as { html?: string };
         if (editorRef.current) editorRef.current.setData(html || "<p></p>");
         else setData(html || "<p></p>");
         notifyContentChange();
