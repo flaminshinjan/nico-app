@@ -201,6 +201,11 @@ documentsRouter.post("/import-docx", upload.single("file"), async (req, res) => 
           "r[style-name='Strong'] => strong",
           "r[style-name='Emphasis'] => em",
           "table => table",
+          "tr => tr",
+          "td => td",
+          "th => th",
+          "p[style-name='Table Contents'] => td > p",
+          "p[style-name='Table Heading'] => th > p",
         ],
         convertImage: mammoth.images.dataUri,
       }

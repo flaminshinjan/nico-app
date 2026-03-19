@@ -19,6 +19,8 @@ import { HTMLElement, parse, type Node as HtmlNode, TextNode } from "node-html-p
 type BlockChild = Paragraph | Table;
 type DocxAlignment = (typeof AlignmentType)[keyof typeof AlignmentType];
 type DocxHeading = (typeof HeadingLevel)[keyof typeof HeadingLevel];
+type DocxWidthType = (typeof WidthType)[keyof typeof WidthType];
+type DocxBorderStyle = (typeof BorderStyle)[keyof typeof BorderStyle];
 
 type TextStyle = {
   bold?: boolean;
@@ -180,6 +182,77 @@ function parseAlignment(node: HTMLElement): DocxAlignment | undefined {
   }
 }
 
+function parsePositiveInt(value: string | undefined): number | undefined {
+  if (!value) return undefined;
+  const parsed = Number.parseInt(value, 10);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : undefined;
+}
+
+function parseCellWidth(cell: HTMLElement): { size: number; type: DocxWidthType } | undefined {
+  const widthAttr = parsePositiveInt(cell.getAttribute("width") ?? "");
+  if (widthAttr) {
+    return { size: widthAttr, type: WidthType.DXA };
+  }
+
+  const style = (cell.getAttribute("style") ?? "").toLowerCase();
+  const widthValue = getStyleDeclaration(style, "width");
+  if (!widthValue) return undefined;
+
+  if (widthValue.endsWith("%")) {
+    const pct = Number.parseFloat(widthValue);
+    if (Number.isFinite(pct) && pct > 0) {
+      return { size: Math.round(pct), type: WidthType.PERCENTAGE };
+    }
+    return undefined;
+  }
+
+  if (widthValue.endsWith("px")) {
+    const px = Number.parseFloat(widthValue);
+    if (Number.isFinite(px) && px > 0) {
+      return { size: Math.round(px * 15), type: WidthType.DXA };
+    }
+  }
+
+  if (widthValue.endsWith("pt")) {
+    const pt = Number.parseFloat(widthValue);
+    if (Number.isFinite(pt) && pt > 0) {
+      return { size: Math.round(pt * 20), type: WidthType.DXA };
+    }
+  }
+
+  return undefined;
+}
+
+function parseCellBorderStyle(cell: HTMLElement): {
+  top: { style: DocxBorderStyle; size: number; color: string };
+  bottom: { style: DocxBorderStyle; size: number; color: string };
+  left: { style: DocxBorderStyle; size: number; color: string };
+  right: { style: DocxBorderStyle; size: number; color: string };
+} {
+  const defaultBorder = { style: BorderStyle.SINGLE, size: 1, color: "B8C0CC" };
+  const noneBorder = { style: BorderStyle.NONE, size: 0, color: "FFFFFF" };
+
+  const style = (cell.getAttribute("style") ?? "").toLowerCase();
+  const borderAll = getStyleDeclaration(style, "border");
+  const borderTop = getStyleDeclaration(style, "border-top");
+  const borderRight = getStyleDeclaration(style, "border-right");
+  const borderBottom = getStyleDeclaration(style, "border-bottom");
+  const borderLeft = getStyleDeclaration(style, "border-left");
+
+  const isNone = (value?: string): boolean => {
+    if (!value) return false;
+    const normalized = value.trim().toLowerCase();
+    return normalized === "none" || normalized.includes(" none");
+  };
+
+  return {
+    top: isNone(borderTop) || isNone(borderAll) ? noneBorder : defaultBorder,
+    right: isNone(borderRight) || isNone(borderAll) ? noneBorder : defaultBorder,
+    bottom: isNone(borderBottom) || isNone(borderAll) ? noneBorder : defaultBorder,
+    left: isNone(borderLeft) || isNone(borderAll) ? noneBorder : defaultBorder,
+  };
+}
+
 function parseInlineNodes(nodes: HtmlNode[], style: TextStyle = {}): ParagraphChild[] {
   const out: ParagraphChild[] = [];
 
@@ -236,7 +309,7 @@ function parseInlineNodes(nodes: HtmlNode[], style: TextStyle = {}): ParagraphCh
   return out;
 }
 
-function paragraphFromNode(node: HTMLElement, options?: { heading?: DocxHeading; bulletLevel?: number; orderedLevel?: number }): Paragraph {
+function paragraphFromNode(node: HTMLElement, options?: { heading?: DocxHeading; bulletLevel?: number; orderedLevel?: number; alignment?: DocxAlignment }): Paragraph {
   const runs = parseInlineNodes(node.childNodes);
   const children = runs.length > 0 ? runs : [new TextRun("")];
   const alignment = parseAlignment(node);
@@ -244,7 +317,7 @@ function paragraphFromNode(node: HTMLElement, options?: { heading?: DocxHeading;
   return new Paragraph({
     children,
     heading: options?.heading,
-    alignment,
+    alignment: options?.alignment ?? alignment,
     bullet: options?.bulletLevel !== undefined ? { level: options.bulletLevel } : undefined,
     numbering: options?.orderedLevel !== undefined
       ? { reference: "nico-numbered", level: Math.min(options.orderedLevel, 2) }
@@ -291,16 +364,22 @@ function listToParagraphs(list: HTMLElement, level = 0): Paragraph[] {
 }
 
 function tableCellToParagraphs(cell: HTMLElement): Paragraph[] {
+  const cellAlignment = parseAlignment(cell);
   const directBlocks = cell.childNodes.filter(
     (child): child is HTMLElement => isElement(child) && ["p", "div", "h1", "h2", "h3", "blockquote"].includes(nodeTag(child))
   );
 
   if (directBlocks.length > 0) {
-    return directBlocks.map((block) => paragraphFromNode(block));
+    return directBlocks.map((block) => paragraphFromNode(block, { alignment: cellAlignment }));
   }
 
   const inlineChildren = parseInlineNodes(cell.childNodes);
-  return [new Paragraph({ children: inlineChildren.length > 0 ? inlineChildren : [new TextRun("")] })];
+  return [
+    new Paragraph({
+      children: inlineChildren.length > 0 ? inlineChildren : [new TextRun("")],
+      alignment: cellAlignment,
+    }),
+  ];
 }
 
 function tableFromNode(tableNode: HTMLElement): Table {
@@ -308,19 +387,19 @@ function tableFromNode(tableNode: HTMLElement): Table {
     const cells = row.childNodes
       .filter((cell): cell is HTMLElement => isElement(cell) && ["td", "th"].includes(cell.tagName.toLowerCase()))
       .map((cell) => {
-        const widthAttr = cell.getAttribute("width") ?? "";
-        const widthNum = Number.parseInt(widthAttr, 10);
+        const colSpan = parsePositiveInt(cell.getAttribute("colspan") ?? "");
+        const rowSpan = parsePositiveInt(cell.getAttribute("rowspan") ?? "");
+        const width = parseCellWidth(cell);
+        const borders = parseCellBorderStyle(cell);
+        const isHeaderCell = cell.tagName.toLowerCase() === "th";
+
         return new TableCell({
           children: tableCellToParagraphs(cell),
-          width: Number.isFinite(widthNum) && widthNum > 0
-            ? { size: widthNum, type: WidthType.DXA }
-            : undefined,
-          borders: {
-            top: { style: BorderStyle.SINGLE, size: 1, color: "B8C0CC" },
-            bottom: { style: BorderStyle.SINGLE, size: 1, color: "B8C0CC" },
-            left: { style: BorderStyle.SINGLE, size: 1, color: "B8C0CC" },
-            right: { style: BorderStyle.SINGLE, size: 1, color: "B8C0CC" },
-          },
+          columnSpan: colSpan,
+          rowSpan,
+          width,
+          borders,
+          shading: isHeaderCell ? { fill: "D9D9D9" } : undefined,
           margins: {
             top: 80,
             bottom: 80,

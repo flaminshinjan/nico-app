@@ -1,5 +1,27 @@
 import { getApiUrl } from "@/lib/api";
 
+function convertTableToMarkdown(table: HTMLElement): string {
+  const rows = Array.from(table.querySelectorAll("tr"));
+  if (rows.length === 0) return "";
+
+  const lines = rows.map((row, rowIndex) => {
+    const cells = Array.from(row.querySelectorAll("th, td")).map((cell) => {
+      const value = (cell.textContent ?? "").replace(/\s+/g, " ").trim();
+      return value.replace(/\|/g, "\\|");
+    });
+
+    const line = `| ${cells.join(" | ")} |`;
+    if (rowIndex === 0) {
+      const separator = `| ${cells.map(() => "---").join(" | ")} |`;
+      return `${line}\n${separator}`;
+    }
+
+    return line;
+  });
+
+  return lines.join("\n");
+}
+
 function nodeToMarkdown(node: Node, listIndex = 0): string {
   if (node.nodeType === Node.TEXT_NODE) return node.textContent ?? "";
   if (node.nodeType !== Node.ELEMENT_NODE) return "";
@@ -30,6 +52,10 @@ function nodeToMarkdown(node: Node, listIndex = 0): string {
     case "pre": return `\`\`\`\n${el.textContent ?? ""}\n\`\`\`\n\n`;
     case "br": return "\n";
     case "hr": return "---\n\n";
+    case "table": {
+      const table = convertTableToMarkdown(el);
+      return table ? `${table}\n\n` : "";
+    }
     default: return children;
   }
 }

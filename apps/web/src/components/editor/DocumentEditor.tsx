@@ -200,7 +200,35 @@ export function DocumentEditor() {
               setData(editor.getData());
               notifyContentChange();
             }}
-            config={{ placeholder: "Start typing or paste content…" }}
+            config={{
+              placeholder: "Start typing or paste content…",
+              table: {
+                contentToolbar: [
+                  "tableColumn",
+                  "tableRow",
+                  "mergeTableCells",
+                  "tableProperties",
+                  "tableCellProperties",
+                ],
+              },
+              toolbar: {
+                items: [
+                  "heading",
+                  "|",
+                  "bold",
+                  "italic",
+                  "link",
+                  "bulletedList",
+                  "numberedList",
+                  "|",
+                  "insertTable",
+                  "blockQuote",
+                  "|",
+                  "undo",
+                  "redo",
+                ],
+              },
+            }}
           />
         </div>
       </div>
