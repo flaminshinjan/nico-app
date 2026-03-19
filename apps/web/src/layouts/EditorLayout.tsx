@@ -4,11 +4,16 @@ import { DocumentOutlinePanel } from "@/components/sidebar/DocumentOutlinePanel"
 import { DocumentEditorPanel } from "@/components/editor/DocumentEditorPanel";
 import { AISidePanel } from "@/components/ai/AISidePanel";
 import { FloatingChatBar } from "@/components/editor/FloatingChatBar";
+<<<<<<< HEAD
 import { LoadingBar } from "@/components/ui/LoadingBar";
 import { ChatProvider, useChat } from "@/context/ChatContext";
+=======
+import { ChatProvider } from "@/context/ChatContext";
+>>>>>>> 930dd86f6a3ec25c0fc95f5a07f1be4ff8306843
 import { DocumentEditorProvider } from "@/context/DocumentEditorContext";
 import { ThemeProvider } from "@/context/ThemeContext";
 
+<<<<<<< HEAD
 function LayoutInner() {
   const [isSidePanelOpen, setIsSidePanelOpen] = useState(false);
   const { isLoading } = useChat();
@@ -79,5 +84,39 @@ export function EditorLayout() {
         </DocumentEditorProvider>
       </ChatProvider>
     </ThemeProvider>
+=======
+export function EditorLayout() {
+  const [isSidePanelOpen, setIsSidePanelOpen] = useState(false);
+
+  return (
+    <ChatProvider>
+      <DocumentEditorProvider>
+        <div className="flex h-screen w-screen overflow-hidden bg-slate-100">
+          <DocumentOutlinePanel />
+          <div className="relative flex flex-1">
+            <DocumentEditorPanel
+              topBarAction={
+                <FloatingChatBar
+                  isOpen={isSidePanelOpen}
+                  onOpen={() => setIsSidePanelOpen(true)}
+                />
+              }
+            />
+            <FloatingChatBar
+              variant="pill"
+              isOpen={isSidePanelOpen}
+              onOpen={() => setIsSidePanelOpen(true)}
+            />
+          </div>
+          {isSidePanelOpen ? (
+            <AISidePanel
+              isOpen={isSidePanelOpen}
+              onClose={() => setIsSidePanelOpen(false)}
+            />
+          ) : null}
+        </div>
+      </DocumentEditorProvider>
+    </ChatProvider>
+>>>>>>> 930dd86f6a3ec25c0fc95f5a07f1be4ff8306843
   );
 }

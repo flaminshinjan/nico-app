@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { CKEditor } from "@ckeditor/ckeditor5-react";
 import ClassicEditor from "@ckeditor/ckeditor5-build-classic";
 import mammoth from "mammoth";
@@ -13,9 +13,19 @@ import { GhostText } from "@/components/editor/GhostText";
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type RawEditor = any;
 
+<<<<<<< HEAD
 export function DocumentEditor() {
   const { registerEditor, notifyContentChange, title } = useDocumentEditor();
   const editorRef = useRef<RawEditor>(null);
+=======
+type DocumentEditorProps = {
+  topBarAction?: ReactNode;
+};
+
+export function DocumentEditor({ topBarAction }: DocumentEditorProps) {
+  const { registerEditor, notifyContentChange } = useDocumentEditor();
+  const editorRef = useRef<EditorInstance | null>(null);
+>>>>>>> 930dd86f6a3ec25c0fc95f5a07f1be4ff8306843
   const unregisterRef = useRef<(() => void) | null>(null);
   const [data, setData] = useState(
     "<p>Start typing or import a .docx file.</p>"
@@ -167,6 +177,7 @@ export function DocumentEditor() {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
           </svg>
         </button>
+        {topBarAction ? <div className="ml-auto">{topBarAction}</div> : null}
       </header>
 
       <div

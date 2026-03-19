@@ -67,6 +67,7 @@ function ErrorCard({
 }
 
 type AISidePanelProps = {
+  isOpen: boolean;
   onClose: () => void;
 };
 

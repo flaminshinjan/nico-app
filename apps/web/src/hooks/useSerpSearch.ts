@@ -1,5 +1,6 @@
 // Legacy reference kept during the Mastra migration. ChatContext now receives
 // sources from the Mastra documentWorkflow response instead of calling this directly.
+<<<<<<< HEAD
 export type SerpResult = {
   title: string;
   url: string;
@@ -72,42 +73,21 @@ function toSerpResult(raw: unknown): SerpResult | null {
       typeof raw.displayed_link === "string" ? raw.displayed_link : undefined,
   }
 }
+=======
+import { fetchSerpResults, normalizeUrl, type SerpResult } from "@/utils/serp";
+>>>>>>> 930dd86f6a3ec25c0fc95f5a07f1be4ff8306843
 
 async function searchWebInternal(query: string): Promise<SerpResult[]> {
-  const { getApiUrl } = await import("@/lib/api");
-  try {
-    const searchParams = new URLSearchParams({
-      q: query,
-      num: "4",
-    });
-    const response = await fetch(
-      `${getApiUrl()}/api/serp/search.json?${searchParams.toString()}`
-    );
-    if (!response.ok) {
-      console.error("SERP API request failed.", response.status, response.statusText);
-      return [];
-    }
+  const normalizedResults = await fetchSerpResults(query, 4);
 
-    const data: unknown = await response.json();
-    if (!isSerpApiResponse(data) || !Array.isArray(data.organic_results)) {
-      console.error("SERP API response shape was invalid.", data);
-      return [];
-    }
-
-    const normalizedResults = data.organic_results
-      .map(toSerpResult)
-      .filter((result): result is SerpResult => result !== null);
-
-    if (import.meta.env.DEV) {
-      console.log(`normalized source count for "${query}"`, normalizedResults.length);
-    }
-
-    return normalizedResults.slice(0, 4);
-  } catch (error: unknown) {
-    console.error("SERP search failed.", error);
-    return [];
+  if (import.meta.env.DEV) {
+    console.log(`normalized source count for "${query}"`, normalizedResults.length);
   }
+
+  return normalizedResults.slice(0, 4);
 }
+
+export type { SerpResult };
 
 export async function searchWeb(query: string): Promise<SerpResult[]> {
   return searchWebInternal(query);

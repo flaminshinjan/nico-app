@@ -1,5 +1,6 @@
 # agents
 
+<<<<<<< HEAD
 Mastra agents and workflows for the nico-app (e.g. document generation). [Mastra](https://mastra.ai/) docs: [project structure](https://mastra.ai/docs/getting-started/project-structure).
 
 **Folder structure:**
@@ -23,6 +24,9 @@ src/mastra/
 └── lib/               # Shared helpers
     └── stream.ts
 ``` We're excited to see what you'll build.
+=======
+Welcome to your new [Mastra](https://mastra.ai/) project! We're excited to see what you'll build.
+>>>>>>> 930dd86f6a3ec25c0fc95f5a07f1be4ff8306843
 
 ## Getting Started
 
