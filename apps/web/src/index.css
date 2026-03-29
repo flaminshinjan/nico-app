@@ -127,17 +127,21 @@ body,
   scrollbar-width: thin;
   scrollbar-color: var(--border-default) transparent;
 }
+
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
+
 ::-webkit-scrollbar-track {
   background: transparent;
 }
+
 ::-webkit-scrollbar-thumb {
   background: var(--border-default);
   border-radius: 9999px;
 }
+
 ::-webkit-scrollbar-thumb:hover {
   background: var(--border-strong);
 }
@@ -210,7 +214,7 @@ body,
   flex-shrink: 0;
 }
 
-.document-page .ck-toolbar .ck-toolbar__items .ck-button,
+.document-page .ck-toolbar .ck-toolbar__items .ck-button:not(.ck-insert-table-dropdown-grid-box),
 .document-page .ck-toolbar .ck-toolbar__items .ck-dropdown__button {
   border-radius: 4px !important;
   background: transparent !important;
@@ -225,24 +229,24 @@ body,
   transition: background 0.12s, color 0.12s;
 }
 
-.document-page .ck-toolbar .ck-toolbar__items .ck-button:hover,
+.document-page .ck-toolbar .ck-toolbar__items .ck-button:not(.ck-insert-table-dropdown-grid-box):hover,
 .document-page .ck-toolbar .ck-toolbar__items .ck-dropdown__button:hover {
   background: var(--toolbar-btn-hover) !important;
   color: var(--text-primary) !important;
 }
 
-.document-page .ck-toolbar .ck-toolbar__items .ck-button:active {
+.document-page .ck-toolbar .ck-toolbar__items .ck-button:not(.ck-insert-table-dropdown-grid-box):active {
   transform: scale(0.95);
 }
 
-.document-page .ck-toolbar .ck-toolbar__items .ck-button:focus,
+.document-page .ck-toolbar .ck-toolbar__items .ck-button:not(.ck-insert-table-dropdown-grid-box):focus,
 .document-page .ck-toolbar .ck-toolbar__items .ck-dropdown__button:focus {
   border: none !important;
   box-shadow: none !important;
   outline: none !important;
 }
 
-.document-page .ck-toolbar .ck-toolbar__items .ck-button.ck-on,
+.document-page .ck-toolbar .ck-toolbar__items .ck-button:not(.ck-insert-table-dropdown-grid-box).ck-on,
 .document-page .ck-toolbar .ck-toolbar__items .ck-dropdown__button.ck-on {
   background: var(--toolbar-btn-active-bg) !important;
   color: var(--toolbar-btn-active-color) !important;
@@ -274,7 +278,6 @@ body,
   border: 1px solid var(--border-default) !important;
   border-radius: 8px !important;
   box-shadow: var(--shadow-lg) !important;
-  overflow: hidden;
 }
 
 .document-page .ck-toolbar .ck-dropdown__panel .ck-list {
@@ -336,6 +339,51 @@ body,
 .document-page .ck-editor__editable .ck-placeholder::before {
   color: #9ca3af;
   font-family: "Lora", Georgia, serif;
+}
+
+/* ── Inserted table in editor ── */
+
+/* Constrain the figure wrapper CKEditor uses */
+.ck-editor__editable .table {
+  max-width: 100% !important;
+  width: auto !important;
+  margin: 1em 0 !important;
+  overflow-x: auto !important;
+}
+
+/* The inner <table> fills the figure — let it do so */
+.ck-editor__editable .table table {
+  border-collapse: collapse !important;
+  width: 100% !important;
+}
+
+/* Inner cell borders — match CKEditor's .table selector specificity */
+.ck-editor__editable .table table td,
+.ck-editor__editable .table table th {
+  border: 1px solid #bfbfbf !important;
+  padding: 0.4em !important;
+  vertical-align: top !important;
+  word-break: break-word !important;
+  font-size: 0.95em !important;
+}
+
+.ck-editor__editable .table table th {
+  background-color: rgba(0, 0, 0, 0.05) !important;
+  font-weight: 600 !important;
+}
+
+/* ── Focused cell indicator (restore what global override removed) ── */
+.ck-editor__editable td.ck-editor__nested-editable.ck-editor__nested-editable_focused,
+.ck-editor__editable th.ck-editor__nested-editable.ck-editor__nested-editable_focused {
+  outline: 2px solid var(--color-accent, #6366f1) !important;
+  outline-offset: -2px !important;
+}
+
+/* Keep table cell focus visible for better insertion/editing UX. */
+.document-page .ck-editor__editable td.ck-editor__nested-editable:focus,
+.document-page .ck-editor__editable td.ck-editor__nested-editable.ck-editor__nested-editable_focused {
+  outline: 2px solid var(--accent-primary) !important;
+  outline-offset: -2px;
 }
 
 /* ── Document typography ── */
@@ -423,9 +471,17 @@ body,
    ═══════════════════════════════════════ */
 
 @keyframes loading-progress {
-  0% { transform: translateX(-100%); }
-  50% { transform: translateX(0%); }
-  100% { transform: translateX(100%); }
+  0% {
+    transform: translateX(-100%);
+  }
+
+  50% {
+    transform: translateX(0%);
+  }
+
+  100% {
+    transform: translateX(100%);
+  }
 }
 
 .loading-bar {
@@ -453,17 +509,20 @@ body,
    ═══════════════════════════════════════ */
 
 @keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
+  0% {
+    background-position: -200% 0;
+  }
+
+  100% {
+    background-position: 200% 0;
+  }
 }
 
 .shimmer {
-  background-image: linear-gradient(
-    90deg,
-    transparent 0%,
-    rgba(123, 140, 222, 0.06) 50%,
-    transparent 100%
-  );
+  background-image: linear-gradient(90deg,
+      transparent 0%,
+      rgba(123, 140, 222, 0.06) 50%,
+      transparent 100%);
   background-size: 200% 100%;
   animation: shimmer 2s ease-in-out infinite;
 }
@@ -473,18 +532,33 @@ body,
    ═══════════════════════════════════════ */
 
 @keyframes shake {
-  0%, 100% { transform: translateX(0); }
-  25% { transform: translateX(-4px); }
-  75% { transform: translateX(4px); }
+
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+
+  25% {
+    transform: translateX(-4px);
+  }
+
+  75% {
+    transform: translateX(4px);
+  }
 }
-.shake { animation: shake 0.3s ease 3; }
+
+.shake {
+  animation: shake 0.3s ease 3;
+}
 
 /* ═══════════════════════════════════════
    Spinner
    ═══════════════════════════════════════ */
 
 @keyframes spin-arc {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .spinner {
@@ -502,8 +576,17 @@ body,
    ═══════════════════════════════════════ */
 
 @keyframes pulse-dot {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.5; transform: scale(0.85); }
+
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 0.5;
+    transform: scale(0.85);
+  }
 }
 
 .pulse-dot {
@@ -520,8 +603,18 @@ body,
    ═══════════════════════════════════════ */
 
 @keyframes dot-pulse {
-  0%, 80%, 100% { opacity: 0.3; transform: scale(0.8); }
-  40% { opacity: 1; transform: scale(1); }
+
+  0%,
+  80%,
+  100% {
+    opacity: 0.3;
+    transform: scale(0.8);
+  }
+
+  40% {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 .dot-loader span {
@@ -532,8 +625,14 @@ body,
   background: var(--text-tertiary);
   animation: dot-pulse 1.4s ease-in-out infinite;
 }
-.dot-loader span:nth-child(2) { animation-delay: 0.16s; }
-.dot-loader span:nth-child(3) { animation-delay: 0.32s; }
+
+.dot-loader span:nth-child(2) {
+  animation-delay: 0.16s;
+}
+
+.dot-loader span:nth-child(3) {
+  animation-delay: 0.32s;
+}
 
 /* ═══════════════════════════════════════
    Prose — themed for modals
@@ -542,26 +641,38 @@ body,
 .prose-themed {
   color: var(--text-primary);
 }
-.prose-themed h1, .prose-themed h2, .prose-themed h3,
-.prose-themed h4, .prose-themed h5, .prose-themed h6 {
+
+.prose-themed h1,
+.prose-themed h2,
+.prose-themed h3,
+.prose-themed h4,
+.prose-themed h5,
+.prose-themed h6 {
   color: var(--text-primary);
 }
-.prose-themed p, .prose-themed li {
+
+.prose-themed p,
+.prose-themed li {
   color: var(--text-secondary);
 }
+
 .prose-themed a {
   color: var(--accent-primary);
 }
+
 .prose-themed strong {
   color: var(--text-primary);
 }
+
 .prose-themed blockquote {
   border-left-color: var(--accent-primary);
   color: var(--text-secondary);
 }
+
 .prose-themed hr {
   border-color: var(--border-default);
 }
+
 .prose-themed code {
   color: var(--accent-primary);
   background: var(--bg-hover);
@@ -569,15 +680,18 @@ body,
   border-radius: 4px;
   font-size: 0.875em;
 }
+
 .prose-themed pre {
   background: var(--bg-base);
   border: 1px solid var(--border-default);
   border-radius: 8px;
 }
+
 .prose-themed table th {
   color: var(--text-primary);
   border-bottom-color: var(--border-default);
 }
+
 .prose-themed table td {
   border-bottom-color: var(--border-subtle);
 }
